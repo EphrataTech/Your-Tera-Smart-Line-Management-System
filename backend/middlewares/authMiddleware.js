@@ -1,0 +1,30 @@
+'use strict';
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
+
+
+const JWT_SECRETE = process.env.JWT_SECRETE;
+
+
+module.exports = (req, res, next) => {
+
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+
+    if(!token){
+        return res.status(401).json({ message: "No token, authorization denied" });
+    }
+
+
+
+    try{
+
+        const decoded = jwt.verify(token, JWT_SECRETE);
+
+        req.user = decoded;
+
+        next();
+
+    }catch (err){
+        res.status(401).json({ message: "Token is invalid" });
+    }
+};

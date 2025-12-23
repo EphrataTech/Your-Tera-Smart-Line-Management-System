@@ -1,0 +1,35 @@
+'use strict';
+
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const { sequelize } = require('./models'); 
+const authRoutes = require('./routes/authRoutes');
+
+const app = express();
+
+// Middleware
+app.use(cors()); 
+app.use(express.json()); 
+
+// Basic Health Check Route
+app.get('/', (req, res) => {
+    res.send('Smart Line Management System API is Running...');
+});
+
+// Routes
+app.use('/api/auth', authRoutes);
+
+// Database Sync and Server Start
+const PORT = process.env.PORT || 5000;
+
+sequelize.authenticate()
+    .then(() => {
+        console.log('Database connected successfully.');
+        app.listen(PORT, () => {
+            console.log(`Server is running on http://localhost:${PORT}`);
+        });
+    })
+    .catch(err => {
+        console.error('Unable to connect to the database:', err);
+    });
