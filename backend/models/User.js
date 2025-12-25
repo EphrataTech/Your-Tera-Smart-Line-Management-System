@@ -38,6 +38,10 @@ module.exports = (sequelize, DataTypes) => {
             foreignKey: 'user_id',
             as: 'Account'
         });
+        User.hasMany(models.QueueTicket, {
+            foreignKey: 'user_id',
+            as: 'tickets'
+        });
     };
 
     return User;

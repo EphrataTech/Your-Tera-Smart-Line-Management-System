@@ -1,5 +1,6 @@
 'use strict';
-const { QueueTicket, Service } = require('../models');
+const { where } = require('sequelize');
+const { QueueTicket, User, Service } = require('../models');
 
 module.exports = {
 
@@ -34,7 +35,42 @@ module.exports = {
             res.status(500).json({ message: error.message });
         }
 
+    },
+
+    getOfficeQueue: async (req, res) => { 
+        try {
+            const { serviceId } = req.params;
+            const tickets = await QueueTicket.findAll({
+                where: { 
+                    service_id: serviceId,
+                    status: ['Waiting', 'Serving'] 
+                },
+                include: [{ 
+                    model: User,
+                     as: 'user', 
+                     attributes: ['phone_number', 'role'] }],
+                order: [['issued_at', 'ASC']]
+            });
+            res.status(200).json(tickets); 
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    },
+
+    updateTicketStatus: async (req, res) => {
+        try {
+            const { ticketId } = req.params;
+            const { status } = req.body;
+
+            const ticket = await QueueTicket.findByPk(ticketId);
+            if(!ticket) return res.status(404).json({ message: "Ticket not found "});
+
+            ticket.status = status;
+            await ticket.save();
+
+            res.status(200).json({ message: `Ticket status updated to ${status}`, ticket });
+        }catch (error) {
+            res.status(500).json({ message: error.message });
+        }
     }
-
-
 }
