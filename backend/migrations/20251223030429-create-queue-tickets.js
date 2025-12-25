@@ -23,7 +23,7 @@ module.exports = {
         onDelete: 'CASCADE'
       },
       ticket_number: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.STRING,
         allowNull: false
       },
       status: {

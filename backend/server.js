@@ -31,6 +31,7 @@ app.use('/api/services', serviceRoutes);
 app.use('/api/queue', queueRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/queue',queueRoutes);
 
 // Database Sync and Server Start
 const PORT = process.env.PORT || 5000;

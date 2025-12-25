@@ -5,29 +5,53 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.INTEGER,
             primaryKey: true,
             autoIncrement: true,
-            field: 'ticket_id'
+            allowNull: false
         },
         user_id: {
             type: DataTypes.INTEGER,
-            field: 'user_id'
+            allowNull: false,
+            references: {
+                model: 'Users', // Matches the table name
+                key: 'user_id'
+            },
+            onUpdate: 'CASCADE',
+            onDelete: 'CASCADE'
         },
         service_id: {
             type: DataTypes.INTEGER,
-            field: 'service_id'
+            allowNull: false,
+            references: {
+                model: 'Services', // Matches the table name
+                key: 'service_id'
+            },
+            onUpdate: 'CASCADE',
+            onDelete: 'CASCADE'
         },
         ticket_number: {
-            type: DataTypes.INTEGER,
-            field: 'ticket_number'
+            type: DataTypes.INTEGER, // Changed from STRING to INTEGER to match your auto-increment logic
+            allowNull: false
+        },
+        issued_at: {
+            type: DataTypes.DATE,
+            allowNull: false,
+            defaultValue: DataTypes.NOW
         },
         status: {
             type: DataTypes.ENUM('Waiting', 'Serving', 'Completed', 'Cancelled'),
+            allowNull: false,
             defaultValue: 'Waiting'
         }
     }, {
         tableName: 'Queue_Tickets',
-        timestamps: false, 
+        timestamps: false, // Since you are using 'issued_at' manually
         underscored: true 
     });
+
+    // Correct way to handle associations in Sequelize models
+    QueueTicket.associate = function(models) {
+        QueueTicket.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' });
+        QueueTicket.belongsTo(models.Service, { foreignKey: 'service_id', as: 'service' });
+    };
 
     return QueueTicket;
 };
