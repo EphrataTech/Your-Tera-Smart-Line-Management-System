@@ -47,5 +47,12 @@ module.exports = (sequelize, DataTypes) => {
         }
     );
 
+    Service.association = function(models) {
+        Service.belongsTo(model.Office, {
+            foreignKey: 'office_id',
+            as: 'office'
+        });
+    };
+
     return Service
 }

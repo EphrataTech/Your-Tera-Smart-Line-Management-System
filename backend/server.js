@@ -7,6 +7,8 @@ const { sequelize } = require('./models');
 const authRoutes = require('./routes/authRoutes');
 const officeRoutes = require('./routes/officeRoutes');
 const userRoutes = require('./routes/userRoutes');
+const serviceRoutes = require('./routes/serviceRoutes');
+const queueRoutes = require('./routes/queueRoutes');
 
 const app = express();
 
@@ -23,6 +25,8 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/offices', officeRoutes); 
 app.use('/api/users', userRoutes);
+app.use('/api/services', serviceRoutes);
+app.use('/api/queue',queueRoutes);
 
 // Database Sync and Server Start
 const PORT = process.env.PORT || 5000;
