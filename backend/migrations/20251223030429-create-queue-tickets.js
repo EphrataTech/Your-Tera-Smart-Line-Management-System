@@ -1,6 +1,4 @@
 'use strict';
-
-/** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('Queue_Tickets', {
@@ -10,48 +8,40 @@ module.exports = {
         autoIncrement: true,
         allowNull: false
       },
-
       user_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        references: {
-          model: 'Users',
-          key: 'user_id'
-        },
+        references: { model: 'Users', key: 'user_id' },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
       },
-
       service_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        references: {
-          model: 'Services',
-          key: 'service_id'
-        },
+        references: { model: 'Services', key: 'service_id' },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE'
       },
-
       ticket_number: {
         type: Sequelize.INTEGER,
         allowNull: false
       },
-
-      issued_at: {
-        type: Sequelize.DATE,
-        allowNull: false,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
-      },
-
       status: {
         type: Sequelize.ENUM('Waiting', 'Serving', 'Completed', 'Cancelled'),
         allowNull: false,
         defaultValue: 'Waiting'
+      },
+      createdAt: {
+          type: Sequelize.DATE,
+          allowNull: false
+      },
+      updatedAt: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')
       }
     });
   },
-
   async down(queryInterface, Sequelize) {
     await queryInterface.dropTable('Queue_Tickets');
   }

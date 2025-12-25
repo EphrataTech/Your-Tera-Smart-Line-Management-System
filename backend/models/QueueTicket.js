@@ -1,67 +1,33 @@
 'use strict';
-
-const { DATE } = require("sequelize");
-
 module.exports = (sequelize, DataTypes) => {
-    const QueueTicket = sequelize.define(
-        'QueueTicket',
-
-        {
-            ticket_id: {
-                type:DataTypes.INTEGER,
-                primaryKey:true,
-                autoIncrement:true,
-                allowNull:false
-            },
-
-            user_id: {
-                type:DataTypes.INTEGER,
-                allowNull:false,
-                references: {
-                    model: 'Users',
-                    key: 'user_id'
-                },
-                onUpdate:"CASCADE",
-                onDelete: 'CASCADE'
-            },
-
-            service_id:{
-                type:DataTypes.INTEGER,
-                allowNull:false,
-                references: {
-                    model: 'Services',
-                    key: 'service_id'
-                },
-                onUpdate: 'CASCADE',
-                onDelete: 'CASCADE'
-            },
-
-            ticket_number: {
-                type:DataTypes.INTEGER,
-                allowNull:false
-            },
-
-            issued_at:{
-                type:DataTypes.DATE,
-                allowNull:false,
-                defaultValue:DataTypes.NOW
-            },
-
-            status: {
-                type:DataTypes.ENUM('Waiting', 'Serving', 'Completed', 'Cancelled'),
-                allowNull:false,
-                defaultValue: 'Waiting'
-            }
-
+    const QueueTicket = sequelize.define('QueueTicket', {
+        ticket_id: {
+            type: DataTypes.INTEGER,
+            primaryKey: true,
+            autoIncrement: true,
+            field: 'ticket_id'
         },
-        {
-            tableName: 'Queue_Tickets',
-            timestamps: false,
-            underscored: true
+        user_id: {
+            type: DataTypes.INTEGER,
+            field: 'user_id'
+        },
+        service_id: {
+            type: DataTypes.INTEGER,
+            field: 'service_id'
+        },
+        ticket_number: {
+            type: DataTypes.INTEGER,
+            field: 'ticket_number'
+        },
+        status: {
+            type: DataTypes.ENUM('Waiting', 'Serving', 'Completed', 'Cancelled'),
+            defaultValue: 'Waiting'
         }
+    }, {
+        tableName: 'Queue_Tickets',
+        timestamps: false, 
+        underscored: true 
+    });
 
-    );
-
-
-    return QueueTicket
-}
+    return QueueTicket;
+};
