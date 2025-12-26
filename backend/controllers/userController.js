@@ -1,13 +1,16 @@
 'use strict';
 const { User, Accounts } = require('../models');
 // Ensure this filename matches your file in the services folder exactly
-const userService = require('../services/userService'); 
+const userService = require('../services/userService');
 
 const getUserProfile = async (req, res) => {
     try {
-        // Use req.params.id from the URL (e.g., /api/users/1)
         const user = await userService.getUserById(req.params.id);
-        if (!user) return res.status(404).json({ message: "User not found" });
+        
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        
         res.status(200).json(user);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -49,10 +52,28 @@ const getAllUsers = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+const updateProfile = async (req, res) => {
+    try {
+        // Use the ID from the authenticated token (req.user.user_id)
+        // or from the URL (req.params.id) depending on your needs
+        const userId = req.user ? req.user.user_id : req.params.id;
+        
+        const result = await userService.updateUser(userId, req.body);
+        
+        if (result[0] === 0) {
+            return res.status(404).json({ message: "User not found or no changes made" });
+        }
+        
+        res.status(200).json({ message: "Profile updated successfully!" });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
 
 // Exporting as an object so the Router can see all functions
 module.exports = {
     getUserProfile,
     getProfile,
-    getAllUsers
+    getAllUsers,
+    updateProfile
 };

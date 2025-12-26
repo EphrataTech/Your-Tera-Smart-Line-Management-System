@@ -3,46 +3,40 @@
 module.exports = (sequelize, DataTypes) => {
     const Accounts = sequelize.define(
         'Accounts',
-
         {
-          account_id:{
-            type:DataTypes.INTEGER,
-            primaryKey:true,
-            autoIncrement:true,
-            allowNull:false
-          },
-            
-          user_id:{
-            type:DataTypes.INTEGER,
-            allowNull:false,
-            references:{
-                model:'Users',
-                key:'user_id'
+            account_id: {
+                type: DataTypes.INTEGER,
+                primaryKey: true,
+                autoIncrement: true,
+                allowNull: false
             },
-            onUpdate:'CASCADE',
-            onDelete:'CASCADE'
-          },
-          password_hash: {
-            type:DataTypes.STRING,
-            allowNull:false
-          },
-
-          email:{
-            type:DataTypes.STRING,
-            allowNull:true,
-            unique:true
-          },
-
-          created_at:{
-            type:DataTypes.DATE,
-            allowNull:false,
-            defaultValue: DataTypes.NOW
-          }
+            user_id: {
+                type: DataTypes.INTEGER,
+                allowNull: false,
+                references: {
+                    model: 'Users',
+                    key: 'user_id'
+                },
+                onUpdate: 'CASCADE',
+                onDelete: 'CASCADE'
+            },
+            password_hash: {
+                type: DataTypes.STRING,
+                allowNull: false
+            },
+            email: {
+                type: DataTypes.STRING,
+                allowNull: true,
+                unique: true
+            }
         },
         {
-            tableName:'Accounts',
-            timestamps:false,
-            underscored:true
+            tableName: 'Accounts',
+            // Set timestamps to true but tell Sequelize to use your snake_case columns
+            timestamps: true,
+            underscored: true,
+            createdAt: 'created_at', 
+            updatedAt: 'updated_at'
         }
     );
 
@@ -54,4 +48,4 @@ module.exports = (sequelize, DataTypes) => {
     };
 
     return Accounts;
-}
+};
