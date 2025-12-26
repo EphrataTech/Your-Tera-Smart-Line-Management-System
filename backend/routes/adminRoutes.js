@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
 
-// Ensure this function name matches the one exported in the controller
 router.get('/analytics', adminController.getAnalytics);
+router.delete('/tickets/:service_id', adminController.deleteServiceTickets);
+router.delete('/services/:service_id/tickets/:ticket_id', adminController.deleteTicket);
 
 module.exports = router;
