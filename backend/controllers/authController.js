@@ -70,7 +70,7 @@ module.exports = {
         }
 
         const token = jwt.sign(
-            { id: account.user_id, role: account.User.role }, 
+            { user_id: account.user_id, role: account.User.role }, 
             JWT_SECRET, 
             { expiresIn: '24h' }
         );
@@ -82,7 +82,7 @@ module.exports = {
         return res.status(200).json({
             message: "Login Successfully!",
             token,
-            user: { id: account.user_id, role: account.User.role }
+            user: { user_id: account.user_id, role: account.User.role }
         });
 
         // IMPORTANT: Delete everything after this line inside the login function!

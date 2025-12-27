@@ -1,9 +1,9 @@
 'use strict';
 const queueService = require('../services/queueService');
+const notificationService = require('../services/notificationService');
 
 exports.joinQueue = async (req, res) => {
     try {
-        // Change this line to read from req.body instead of req.user
         const { user_id, service_id } = req.body; 
 
         if (!user_id || !service_id) {
@@ -11,13 +11,40 @@ exports.joinQueue = async (req, res) => {
         }
 
         const ticket = await queueService.joinQueue(user_id, service_id);
-        
+        await notificationService.createNotification(user_id, "You have successfully joined the queue!", "InApp");
+
+        const posData = await queueService.getQueuePosition(service_id, ticket.ticket_number);
+        if (posData.position === 6) {
+            await notificationService.createNotification(user_id, "There are 5 people in front of you.", "SMS");
+        }
+
         res.status(201).json({
             message: "Ticket created successfully!",
             data: ticket
         });
     } catch (error) {
         res.status(500).json({ error: error.message });
+    }
+};
+
+exports.cancelMyTicket = async (req, res) => {
+    try {
+        const { ticketId } = req.params;
+        const user_id = req.user.user_id; // Standardized key from your updated jwt.sign
+
+        // This call will now work because getTicketById is defined above
+        const ticket = await queueService.getTicketById(ticketId);
+        
+        if (!ticket || ticket.user_id !== user_id) {
+            return res.status(404).json({ error: "Ticket not found or unauthorized" });
+        }
+
+        const result = await queueService.cancelTicket(ticketId, user_id);
+        
+        // After cancellation, the service automatically checks for position 6 shifts
+        res.json(result);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
     }
 };
 
@@ -31,9 +58,6 @@ exports.getOfficeQueue = async (req, res) => {
     }
 };
 
-/**
- * Get the logged-in user's active ticket
- */
 exports.getMyStatus = async (req, res) => {
     try {
         const userId = req.user.id; 
@@ -43,7 +67,6 @@ exports.getMyStatus = async (req, res) => {
             return res.status(200).json({ message: "No active tickets found." });
         }
 
-        // Map through all tickets to get specific positions
         const results = await Promise.all(tickets.map(async (t) => {
             const pos = await queueService.getQueuePosition(t.service_id, t.ticket_number);
             return {
@@ -58,17 +81,5 @@ exports.getMyStatus = async (req, res) => {
         res.json(results);
     } catch (error) {
         res.status(500).json({ error: error.message });
-    }
-};
-/**
- * Allow a user to cancel their own ticket
- */
-exports.cancelMyTicket = async (req, res) => {
-    try {
-        const { ticketId } = req.params;
-        const result = await queueService.cancelTicket(ticketId, req.user.id);
-        res.json(result);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
     }
 };

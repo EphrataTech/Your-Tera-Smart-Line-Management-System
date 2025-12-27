@@ -1,23 +1,47 @@
 const adminService = require('../services/adminService');
+const queueService = require('../services/queueService'); 
+const notificationService = require('../services/notificationService');
 
-// Make sure the name 'deleteServiceTickets' matches EXACTLY what you call in the route
 exports.deleteServiceTickets = async (req, res) => {
     try {
         const { service_id } = req.params;
+
+        // 1. Find all users currently in this service's queue BEFORE deleting them
+        const activeTickets = await Queue.findAll({ 
+            where: { service_id, status: 'active' } 
+        });
+
+        // 2. Perform the actual mass deletion
         const result = await adminService.resetQueueForDay(service_id); 
+
+        // 3. Notify all affected users
+        if (activeTickets.length > 0) {
+            await Promise.all(activeTickets.map(ticket => 
+                notificationService.createNotification(
+                    ticket.user_id, 
+                    "The service queue has been reset and your ticket was removed.", 
+                    "InApp"
+                )
+            ));
+        }
+
         res.status(200).json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 
-exports.deleteTicket = async (req, res) => {
+// controllers/adminController.js
+
+exports.adminDeleteTicket = async (req, res) => {
     try {
-        const { service_id, ticket_id } = req.params; // Extracts both from the URL
-        const result = await adminService.deleteSpecificTicket(service_id, ticket_id);
+        const { ticketId } = req.params;
+
+        const result = await queueService.deleteTicket(ticketId);
+
         res.status(200).json(result);
     } catch (error) {
-        res.status(404).json({ error: error.message });
+        res.status(400).json({ error: error.message });
     }
 };
 

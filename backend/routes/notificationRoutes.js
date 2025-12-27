@@ -1,12 +1,10 @@
 'use strict';
 const express = require('express');
-const router = express.Router(); // This line was missing!
+const router = express.Router();
 const notificationController = require('../controllers/notificationController');
 
-// Get notifications for a specific user
+router.post('/create', notificationController.sendNotification);
 router.get('/:userId', notificationController.getNotifications);
-
-// Mark a specific notification as read
-router.put('/read/:id', notificationController.updateStatus);
+router.put('/status/:id', notificationController.updateStatus);
 
 module.exports = router;

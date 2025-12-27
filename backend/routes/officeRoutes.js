@@ -1,15 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const officeController = require('../controllers/officeController');
-const authMiddleware = require('../middlewares/authMiddleware');
 const roleMiddleware = require('../middlewares/roleMiddleware');
+const { verifyToken } = require('../middlewares/authMiddleware');
 
-
-router.get('/', authMiddleware, officeController.getOffice);
+router.get('/', verifyToken, officeController.getOffice);
 
 
 router.post('/add',
-    authMiddleware, 
+    verifyToken, 
     roleMiddleware('Admin'),
     officeController.addOffice
 );

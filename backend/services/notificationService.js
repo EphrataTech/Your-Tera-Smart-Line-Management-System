@@ -1,40 +1,48 @@
 'use strict';
 const { Notification } = require('../models');
 
-/**
- * Logic to create a notification for a user
- */
-const createNotification = async (user_id, message) => {
-    return await Notification.create({
-        user_id: user_id,
-        message: message,
-        // Match the exact ENUM casing (usually lowercase 'unread' or 'waiting')
-        status: 'unread', 
-        created_at: new Date()
-    });
-};
-/**
- * Logic to get all notifications for a specific user
- */
-const getUserNotifications = async (user_id) => {
-    return await Notification.findAll({
-        where: { user_id },
-        order: [['created_at', 'DESC']]
-    });
-};
-
-/**
- * Logic to mark a notification as read
- */
-const markAsRead = async (notification_id) => {
-    return await Notification.update(
-        { status: 'Read' },
-        { where: { id: notification_id } }
-    );
-};
-
 module.exports = {
-    createNotification,
-    getUserNotifications,
-    markAsRead
+    createNotification: async (user_id, message, type) => {
+        return await Notification.create({
+            user_id: user_id,
+            message: message,
+            type: type, 
+            status: 'Pending', 
+            created_at: new Date() 
+        });
+    },
+
+    getUserNotifications: async (user_id) => {
+        return await Notification.findAll({
+            where: { user_id },
+            order: [['created_at', 'DESC']]
+        });
+    },
+    
+    markAsRead: async (notification_id) => {
+        return await Notification.update(
+            { status: 'Read' },
+            { where: { notification_id } }
+        );
+    },
+
+    markAsSent: async (notification_id) => {
+        return await Notification.update(
+            { status: 'Sent' },
+            { where: { notification_id } }
+        );
+    },
+
+    markAsFailed: async (notification_id) => {
+        return await Notification.update(
+            { status: 'Failed' },
+            { where: { notification_id } }
+        );
+    },
+    markAsPending: async (notification_id) => {
+    return await Notification.update(
+        { status: 'Pending' }, // 'Pending' is already allowed in your ENUM
+        { where: { notification_id: notification_id } }
+    );
+  }
 };
