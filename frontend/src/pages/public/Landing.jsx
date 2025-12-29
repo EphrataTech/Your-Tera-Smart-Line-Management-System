@@ -10,8 +10,9 @@ export default function LandingPage() {
     <main>
       <Navbar />
       <Hero />
-      <ServicesHeader />
+      
       <FeatureCards />
+      <ServicesHeader />
       <Testimonials />
       <Footer />
     </main>
