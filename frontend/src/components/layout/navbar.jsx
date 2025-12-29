@@ -1,4 +1,6 @@
+
 import { Link, useNavigate } from "react-router-dom";
+
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -14,6 +16,7 @@ const Navbar = () => {
         <Link to="/" className="nav-link">HOME</Link>
         <Link to="/about" className="nav-link">ABOUT</Link>
         <Link to="/services" className="nav-link">SERVICES</Link>
+        <Bell className="bell"/>
       </div>
 
       <div className="navbar-actions">
