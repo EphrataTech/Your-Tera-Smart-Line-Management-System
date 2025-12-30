@@ -1,6 +1,5 @@
-
 import { Link, useNavigate } from "react-router-dom";
-
+import { Bell } from "lucide-react";
 
 const Navbar = () => {
   const navigate = useNavigate();
