@@ -4,23 +4,29 @@ const { Office } = require('../models');
 
 module.exports = {
     getOffice: async (req, res) => {
-        try{
+        try {
             const offices = await Office.findAll();
             res.status(200).json(offices);
-        }catch{
+        } catch (error) { // Added (error) here
             res.status(500).json({ error: error.message });
         }
     },
 
     addOffice: async (req, res) => {
-        try{
-            const { name, location, type } = req.body;
-            const newOffice = await Office.create({ name, location, type })  ;
+        try {
+            // Check your Model! If your DB columns are 'office_name', 
+            // make sure these match.
+            const { office_name, location, type } = req.body; 
+            
+            const newOffice = await Office.create({ 
+                office_name, 
+                location, 
+                type 
+            });
+            
             res.status(201).json(newOffice);
-        }catch{
+        } catch (error) { // Added (error) here
             res.status(500).json({ error: error.message });
         }
     }
-
-
 };

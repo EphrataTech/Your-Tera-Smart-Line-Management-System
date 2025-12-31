@@ -6,13 +6,17 @@ const { where } = require('sequelize');
 const { User, Accounts, Session, sequelize } = require('../models');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = process.env.JWT_SECRET || process.env.JWT_SECRETE;
 
 
-if (!JWT_SECRET) {
-    console.error('ERROR: JWT_SECRET environment variable is not set!');
+// Change this line to include a hardcoded fallback string
+const JWT_SECRET = process.env.JWT_SECRET || process.env.JWT_SECRETE || "my_temporary_secret_key_123";
+
+// This will now print to your terminal so you can see if it's working
+if (JWT_SECRET === "my_temporary_secret_key_123") {
+    console.log('⚠️ Using fallback JWT Secret. Check your .env file later.');
+} else {
+    console.log('✅ JWT Secret loaded successfully!');
 }
-
 module.exports = {
     // Register: Create User and Account together
     register: async (req, res) => {

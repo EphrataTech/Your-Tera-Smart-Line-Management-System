@@ -1,41 +1,33 @@
 'use strict';
 const jwt = require('jsonwebtoken');
-require('dotenv').config();
-
-
-const JWT_SECRET = process.env.JWT_SECRET || process.env.JWT_SECRETE;
-
-// Validate JWT_SECRET is set
-if (!JWT_SECRET) {
-    console.error('ERROR: JWT_SECRET environment variable is not set!');
-}
-
 
 module.exports = (req, res, next) => {
+    // Access the secret from the environment
+    const secret = process.env.JWT_SECRET;
 
-    const token = req.header('Authorization')?.replace('Bearer ', '');
-
-    if(!token){
-        return res.status(401).json({ message: "No token, authorization denied" });
-    }
-
-
-
-    if (!JWT_SECRET) {
+    // 1. Check if the secret exists at all
+    if (!secret) {
+        console.error('❌ AUTH_ERROR: JWT_SECRET is missing from process.env');
         return res.status(500).json({ 
-            message: "JWT_SECRET is not configured." 
+            message: "Server configuration error: Missing Secret Key." 
         });
     }
 
-    try{
+    // 2. Get the token from the header
+    const authHeader = req.header('Authorization');
+    const token = authHeader?.replace('Bearer ', '');
 
-        const decoded = jwt.verify(token, JWT_SECRET);
+    if (!token) {
+        return res.status(401).json({ message: "No token, authorization denied" });
+    }
 
+    try {
+        // 3. Verify the token
+        const decoded = jwt.verify(token, secret);
         req.user = decoded;
-
         next();
-
-    }catch (err){
+    } catch (err) {
+        console.error('❌ AUTH_ERROR: Token verification failed:', err.message);
         res.status(401).json({ message: "Token is invalid" });
     }
 };
