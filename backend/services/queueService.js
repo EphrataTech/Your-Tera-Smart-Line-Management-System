@@ -1,137 +1,129 @@
 'use strict';
-const { QueueTicket, User, Service, Sequelize } = require('../models');
-const notificationService = require('./notificationService'); 
+const { QueueTicket, User, Service, sequelize } = require('../models');
+const { Op } = require('sequelize');
+const notificationService = require('./notificationService');
 
-module.exports = {
-    // 1. Join Queue (Includes Position 6 check for initial join)
-    joinQueue: async (user_id, service_id) => {
+class QueueService {
+    // 1. Join Queue (With Smart Ticket Numbering & SMS)
+    async joinQueue(userId, serviceId, phoneNumber) {
+        // Check for active tickets
         const existingTicket = await QueueTicket.findOne({
-            where: { user_id, service_id, status: ['Waiting', 'In Progress'] }
+            where: { user_id: userId, service_id: serviceId, status: ['Waiting', 'Serving'] }
         });
-        if (existingTicket) throw new Error('You already have an active ticket for this service.');
+        if (existingTicket) throw new Error('You are already in this queue.');
 
-        const lastTicket = await QueueTicket.max('ticket_number', { where: { service_id } });
-        const newTicket = await QueueTicket.create({
-            user_id,
-            service_id,
-            ticket_number: (lastTicket || 0) + 1,
+        const service = await Service.findByPk(serviceId);
+        if (!service) throw new Error('Service not found.');
+
+        // Calculate Position
+        const peopleAhead = await QueueTicket.count({
+            where: { service_id: serviceId, status: 'Waiting' }
+        });
+        const nextPosition = peopleAhead + 1;
+
+        // Generate Ticket Number (Prefix-100+Pos)
+        const prefix = service.service_name ? service.service_name.substring(0, 2).toUpperCase() : 'TK';
+        const ticketNumber = `${prefix}-${100 + nextPosition}`;
+        const estimatedWaitTime = peopleAhead * (service.avg_wait_time || 15);
+
+        // Create Ticket
+        const ticket = await QueueTicket.create({
+            user_id: userId,
+            service_id: serviceId,
+            ticket_number: ticketNumber,
+            phone_number: phoneNumber,
+            position: nextPosition,
             status: 'Waiting'
         });
 
-        // Optional: Check position immediately upon joining
-        await module.exports.checkAndNotifyNewPositionSix(service_id);
-        return newTicket;
-    },
+        // Notify User
+        await notificationService.notifyUser(
+            userId, 
+            phoneNumber, 
+            `Smart Line: Ticket ${ticketNumber}. ${peopleAhead} ahead. Est. wait: ${estimatedWaitTime} mins.`
+        );
 
-    // 2. Helper: Position Shift Detector (Both SMS & InApp for the new #6)
-    checkAndNotifyNewPositionSix: async (service_id) => {
-        const positionSixTicket = await QueueTicket.findOne({
-            where: { service_id: service_id, status: 'Waiting' },
-            order: [['ticket_number', 'ASC']],
-            offset: 5, 
+        return ticket;
+    }
+
+    // 2. Update Status (With "Turn Notification" and "5-Back Notification")
+    async updateTicketStatus(ticketId, newStatus) {
+        const ticket = await QueueTicket.findByPk(ticketId, {
             include: [{ model: User, as: 'user' }]
         });
+        if (!ticket) throw new Error('Ticket not found');
 
-        if (positionSixTicket) {
-            const userId = positionSixTicket.user_id;
-            const message = "You are now at position 6! There are only 5 people in front of you.";
-            await notificationService.createNotification(userId, message, 'SMS');
+        ticket.status = newStatus;
+        await ticket.save();
+
+        if (newStatus === 'Serving') {
+            // Notify the person currently called
+            await notificationService.notifyUser(
+                ticket.user_id,
+                ticket.phone_number,
+                `Smart Line: It is your turn! Please proceed to the counter for ${ticket.ticket_number}.`
+            );
+
+            // Notify the person 5 spots behind (Position Shift Detector)
+            const targetPosition = ticket.position + 5;
+            const personFiveBack = await QueueTicket.findOne({
+                where: { position: targetPosition, service_id: ticket.service_id, status: 'Waiting' }
+            });
+
+            if (personFiveBack) {
+                await notificationService.notifyUser(
+                    personFiveBack.user_id,
+                    personFiveBack.phone_number,
+                    `Smart Line: Reminder! Only 5 people ahead. Please head to the office now.`
+                );
+            }
         }
-    },
+        return ticket;
+    }
 
-    // 3. Helper: Get Ticket By ID
-    getTicketById: async (ticket_id) => {
-        return await QueueTicket.findByPk(ticket_id);
-    },
-
-    // 4. Cancel Ticket (With specific InApp notification for the canceller)
-    cancelTicket: async (ticket_id, user_id) => {
-        const ticket = await QueueTicket.findOne({ where: { ticket_id, user_id } });
+    // 3. Cancel Ticket (User side)
+    async cancelTicket(ticketId, userId) {
+        const ticket = await QueueTicket.findOne({ where: { ticket_id: ticketId, user_id: userId } });
         if (!ticket) throw new Error('Ticket not found or unauthorized');
 
-        const serviceId = ticket.service_id;
         ticket.status = 'Cancelled';
         await ticket.save();
 
-        // Specific InApp notification for the user who cancelled
-        await notificationService.createNotification(
-            user_id, 
-            `Your queue ticket (Number: ${ticket.ticket_number}) has been cancelled successfully.`, 
-            'InApp'
-        );
-
-        // Check if the next person in line shifted to position 6
-        await module.exports.checkAndNotifyNewPositionSix(serviceId);
-
+        await notificationService.notifyUser(userId, ticket.phone_number, `Your ticket ${ticket.ticket_number} has been cancelled.`);
         return { message: "Ticket cancelled successfully." };
-    },
+    }
 
-    // 5. Admin Delete Ticket
-    deleteTicket: async (ticket_id) => {
-        // 1. Find the ticket first to get user and service info
-        const ticket = await QueueTicket.findByPk(ticket_id);
-        if (!ticket) throw new Error('Ticket not found');
-
-        const serviceId = ticket.service_id;
-        const userId = ticket.user_id;
-
-        // 2. Physically remove or update status
-        await ticket.destroy(); 
-
-        // 3. Notification for the deleted user (InApp)
-        await notificationService.createNotification(
-            userId, 
-            `Your queue ticket (Number: ${ticket.ticket_number}) has been removed by an administrator.`, 
-            'InApp'
-        );
-
-        // 4. Notification for the new 6th person (InApp + SMS)
-        await module.exports.checkAndNotifyNewPositionSix(serviceId);
-
-        return { message: "Admin successfully removed ticket and notified users." };
-    },
-    // 6. Get Queue Position Logic
-    getQueuePosition: async (service_id, ticket_number) => {
-        const service = await Service.findByPk(service_id);
-        const waitPerPerson = service ? service.avg_wait_time : 0;
+    // 4. Get Live Status for Frontend
+    async getLiveStatus(ticketId) {
+        const ticket = await QueueTicket.findByPk(ticketId);
+        if (!ticket || ticket.status !== 'Waiting') return { status: 'Served' };
 
         const peopleAhead = await QueueTicket.count({
             where: {
-                service_id: service_id,
+                service_id: ticket.service_id,
                 status: 'Waiting',
-                ticket_number: { [Sequelize.Op.lt]: ticket_number }
+                position: { [Op.lt]: ticket.position }
             }
         });
 
+        const service = await Service.findByPk(ticket.service_id);
+        const waitTime = service ? service.avg_wait_time : 15;
+
         return {
+            ticketNumber: ticket.ticket_number,
             position: peopleAhead + 1,
-            estimatedWaitTime: peopleAhead * waitPerPerson
+            estimatedWaitTime: peopleAhead * waitTime
         };
-    },
+    }
 
-    // 7. Get Queue By Service (for office view)
-    getQueueByService: async (service_id) => {
+    // 5. Get My Active Tickets (For User Dashboard)
+    async getMyActiveTickets(userId) {
         return await QueueTicket.findAll({
-            where: { service_id },
-            include: [
-                { model: User, as: 'user', attributes: ['user_id', 'username', 'email'] },
-                { model: Service, as: 'service', attributes: ['service_id', 'service_name'] }
-            ],
-            order: [['ticket_number', 'ASC']]
-        });
-    },
-
-    // 8. Get My Active Tickets
-    getMyActiveTickets: async (user_id) => {
-        return await QueueTicket.findAll({
-            where: {
-                user_id: user_id,
-                status: ['Waiting', 'Serving']
-            },
-            include: [
-                { model: Service, as: 'service', attributes: ['service_id', 'service_name'] }
-            ],
+            where: { user_id: userId, status: ['Waiting', 'Serving'] },
+            include: [{ model: Service, as: 'service', attributes: ['service_name'] }],
             order: [['created_at', 'DESC']]
         });
     }
-};
+}
+
+module.exports = new QueueService();

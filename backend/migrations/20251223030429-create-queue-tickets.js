@@ -1,4 +1,5 @@
 'use strict';
+/** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('Queue_Tickets', {
@@ -31,14 +32,10 @@ module.exports = {
         allowNull: false,
         defaultValue: 'Waiting'
       },
-      createdAt: {
-          type: Sequelize.DATE,
-          allowNull: false
-      },
-      updatedAt: {
+      issued_at: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       }
     });
   },
