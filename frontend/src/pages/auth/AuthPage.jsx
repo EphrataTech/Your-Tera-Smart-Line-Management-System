@@ -11,11 +11,9 @@ const AuthPage = ({ initialMode = "signup" }) => {
     initialMode === "signin" ? "signin" : "signup"
   );
   const [formValues, setFormValues] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
+    fullname: "",
+    phone_number: "",
     password: "",
-    role: "Customer", // "Admin" | "Customer" - matching backend enum
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -36,13 +34,10 @@ const AuthPage = ({ initialMode = "signup" }) => {
     try {
       if (mode === "signup") {
         // Register new user
-        const username = `${formValues.firstName} ${formValues.lastName}`.trim() || formValues.email;
         const response = await authService.register({
-          email: formValues.email,
+          phone_number: formValues.phone_number,
           password: formValues.password,
-          username: username,
-          phone_number: null, // Optional field
-          role: formValues.role // Already "Admin" or "Customer"
+          fullname: formValues.fullname
         });
         
         if (response.data) {
@@ -52,7 +47,7 @@ const AuthPage = ({ initialMode = "signup" }) => {
       } else {
         // Login
         const response = await authService.login({
-          email: formValues.email,
+          phone_number: formValues.phone_number,
           password: formValues.password
         });
 
@@ -60,7 +55,7 @@ const AuthPage = ({ initialMode = "signup" }) => {
           const userData = {
             user_id: response.data.user.user_id,
             role: response.data.user.role,
-            email: formValues.email
+            phone_number: formValues.phone_number
           };
           
           login(userData, response.data.token);
@@ -91,11 +86,7 @@ const AuthPage = ({ initialMode = "signup" }) => {
       <div className="auth-card">
         <h1>{mode === "signup" ? "Create an account" : "Sign in"}</h1>
 
-        <button className="google-btn" type="button">
-          G Sign {mode === "signup" ? "Up" : "In"} with Google
-        </button>
-
-          <div className="divider">OR</div>
+          <div className="divider">Welcome</div>
 
         {error && (
           <div className="auth-error" style={{ 
@@ -112,51 +103,25 @@ const AuthPage = ({ initialMode = "signup" }) => {
 
         <form onSubmit={handleSubmit}>
           {mode === "signup" && (
-            <>
-              <div className="row">
-                <div className="field">
-                  <label>First Name</label>
-                  <input
-                    type="text"
-                    placeholder="First Name"
-                    value={formValues.firstName}
-                    onChange={handleChange("firstName")}
-                    required
-                  />
-                </div>
-                <div className="field">
-                  <label>Last Name</label>
-                  <input
-                    type="text"
-                    placeholder="Last Name"
-                    value={formValues.lastName}
-                    onChange={handleChange("lastName")}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="field">
-                <label>Role</label>
-                <select
-                  value={formValues.role}
-                  onChange={handleChange("role")}
-                  required
-                >
-                  <option value="Customer">Customer</option>
-                  <option value="Admin">Admin</option>
-                </select>
-              </div>
-            </>
+            <div className="field">
+              <label>Full Name</label>
+              <input
+                type="text"
+                placeholder="Enter your full name"
+                value={formValues.fullname}
+                onChange={handleChange("fullname")}
+                required
+              />
+            </div>
           )}
 
           <div className="field">
-            <label>Email</label>
+            <label>Phone Number</label>
             <input
-              type="email"
-              placeholder="Email"
-              value={formValues.email}
-              onChange={handleChange("email")}
+              type="tel"
+              placeholder="Enter your phone number"
+              value={formValues.phone_number}
+              onChange={handleChange("phone_number")}
               required
             />
           </div>
