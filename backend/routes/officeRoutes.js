@@ -1,17 +1,23 @@
 const express = require('express');
 const router = express.Router();
 const officeController = require('../controllers/officeController');
-const authMiddleware = require('../middlewares/authMiddleware');
 const roleMiddleware = require('../middlewares/roleMiddleware');
+const { verifyToken } = require('../middlewares/authMiddleware');
+
 
 // --- Public Routes ---
 // Allow everyone to see the offices (no middleware needed)
-router.get('/', officeController.getOffices); 
+
 
 // --- Admin Only Routes ---
 // Only Admins can add, update, or delete
+
+router.get('/', verifyToken, officeController.getOffice);
+
+
+
 router.post('/add',
-    authMiddleware, 
+    verifyToken, 
     roleMiddleware('Admin'),
     officeController.addOffice
 );

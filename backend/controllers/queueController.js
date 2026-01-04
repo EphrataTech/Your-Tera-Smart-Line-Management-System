@@ -1,34 +1,63 @@
+'use strict';
 const queueService = require('../services/queueService');
+const notificationService = require('../services/notificationService');
 
 // 1. Join a Queue (Citizen action)
-exports.join = async (req, res) => {
+exports.joinQueue = async (req, res) => {
     try {
-        // Use the same names your frontend will send in the JSON body
-        const { serviceId, officeId, phone_number } = req.body;
+        // Support both camelCase (develop) and snake_case (main) for frontend flexibility
+        const serviceId = req.body.serviceId || req.body.service_id;
+        const phoneNumber = req.body.phone_number || req.body.phoneNumber;
+        
+        // Use user_id from the verified JWT token (authMiddleware)
+        const userId = req.user.user_id || req.user.id;
 
-        // Ensure req.user exists (if using Auth) or use a fallback for testing
-        const userId = req.user ? req.user.id : req.body.userId; 
+        if (!serviceId) {
+            return res.status(400).json({ error: "service_id is required" });
+        }
 
-        const ticket = await queueService.joinQueue(
-            userId, 
-            serviceId, 
-            officeId,
-            phone_number // Matches the 4th argument in your Service
-        );
+        const ticket = await queueService.joinQueue(userId, serviceId, phoneNumber);
 
         res.status(201).json({
             success: true,
-            message: "Successfully joined the queue",
-            ticket
+            message: "Successfully joined the queue!",
+            data: ticket
         });
     } catch (error) {
-        // Logging the error helps you debug during frontend integration
         console.error("Join Queue Error:", error.message);
         res.status(400).json({ success: false, error: error.message });
     }
 };
 
-// 2. Update Ticket Status (Staff action)
+// 2. Get Live Status for Logged-in User (Citizen Dashboard)
+exports.getMyStatus = async (req, res) => {
+    try {
+        const userId = req.user.user_id || req.user.id; 
+        const tickets = await queueService.getMyActiveTickets(userId);
+
+        if (!tickets || tickets.length === 0) {
+            return res.status(200).json({ message: "No active tickets found.", tickets: [] });
+        }
+
+        // Map through tickets to add live position data
+        const results = await Promise.all(tickets.map(async (t) => {
+            const liveData = await queueService.getLiveStatus(t.ticket_id);
+            return {
+                ticket_id: t.ticket_id,
+                service_name: t.service.service_name,
+                ticket_number: t.ticket_number,
+                status: t.status,
+                ...liveData
+            };
+        }));
+
+        res.json(results);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+// 3. Update Ticket Status (Staff/Admin action - Call Next/Complete)
 exports.updateStatus = async (req, res) => {
     try {
         const { ticketId } = req.params;
@@ -43,5 +72,29 @@ exports.updateStatus = async (req, res) => {
         });
     } catch (error) {
         res.status(400).json({ success: false, error: error.message });
+    }
+};
+
+// 4. Cancel My Ticket (Citizen action)
+exports.cancelMyTicket = async (req, res) => {
+    try {
+        const { ticketId } = req.params;
+        const userId = req.user.user_id || req.user.id;
+
+        const result = await queueService.cancelTicket(ticketId, userId);
+        res.json(result);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
+
+// 5. Get All Tickets for a Service (Office Display view)
+exports.getOfficeQueue = async (req, res) => { 
+    try {
+        const { serviceId } = req.params;
+        const tickets = await queueService.getQueueByService(serviceId);
+        res.status(200).json(tickets); 
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 };

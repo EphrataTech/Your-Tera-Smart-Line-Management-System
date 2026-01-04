@@ -24,15 +24,7 @@ module.exports = {
         onDelete: 'CASCADE'
       },
       ticket_number: {
-        type: Sequelize.STRING, // Changed to STRING for prefixes like "PA-101"
-        allowNull: false
-      },
-      phone_number: { // NEW: Destination for Traccar SMS
         type: Sequelize.STRING,
-        allowNull: false
-      },
-      position: { // NEW: Used to calculate the "5 people left" alert
-        type: Sequelize.INTEGER,
         allowNull: false
       },
       status: {

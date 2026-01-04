@@ -1,3 +1,4 @@
+
 'use strict';
 const express = require('express');
 const router = express.Router();
@@ -23,5 +24,13 @@ router.put('/:id', authMiddleware, serviceController.updateService);
 
 // 5. Delete a service
 router.delete('/:id', authMiddleware, serviceController.deleteService);
+
+const roleMiddleware = require('../middlewares/roleMiddleware');
+
+
+router.get('/office/:officeId', verifyToken, serviceController.getServiceByOffice);
+router.post('/add', verifyToken, roleMiddleware('Admin'), serviceController.createService);
+
+
 
 module.exports = router;

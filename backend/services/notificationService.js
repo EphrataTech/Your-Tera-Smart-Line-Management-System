@@ -1,25 +1,50 @@
 'use strict';
 const axios = require('axios');
+const { Notification } = require('../models');
 
 /**
- * Notification Service - Bridge between Backend and Traccar SMS Gateway
+ * Combined Notification Service: 
+ * 1. Logs to Database (In-app notifications)
+ * 2. Sends SMS via Traccar Gateway
  */
 class NotificationService {
     constructor() {
-        // Replace with your actual Cloud Token from the Traccar App
         this.traccarToken = 'cKPSK8W0Q3uNnWzGFnR11t:APA91bFzfnlnLXe1vuC_mI_XZuIn3dYrsKbcjENwbb31by4FJ2B_SuwvnNfZcKTIugZ8LzswYlY_tfHl41Hp9VYOCc28URi-f32wQfirZ8Ijt1-L0yXGtDs'; 
         this.traccarUrl = 'https://www.traccar.org/sms/'; 
     }
 
     /**
-     * Sends an SMS via the Traccar Android Gateway
-     * @param {string} phoneNumber - The recipient's phone number (e.g., +2519...)
-     * @param {string} message - The text content
+     * The Master Function: Logs to DB and then sends SMS
+     */
+    async notifyUser(user_id, phoneNumber, message, type = 'SMS') {
+        // 1. Create record in Database first (from main)
+        const dbNotification = await Notification.create({
+            user_id: user_id,
+            message: message,
+            type: type, 
+            status: 'Pending', 
+            created_at: new Date() 
+        });
+
+        // 2. Try to send the actual SMS (from develop)
+        const smsSuccess = await this.sendTicketSMS(phoneNumber, message);
+
+        // 3. Update DB status based on SMS result
+        if (smsSuccess) {
+            await dbNotification.update({ status: 'Sent' });
+        } else {
+            await dbNotification.update({ status: 'Failed' });
+        }
+
+        return dbNotification;
+    }
+
+    /**
+     * Internal: Traccar SMS Logic
      */
     async sendTicketSMS(phoneNumber, message) {
         try {
-            console.log(`📡 Attempting to send SMS to ${phoneNumber}...`);
-
+            console.log(`📡 Sending SMS to ${phoneNumber}...`);
             const response = await axios.post(this.traccarUrl, {
                 to: phoneNumber,
                 message: message
@@ -30,18 +55,28 @@ class NotificationService {
                 }
             });
 
-            if (response.status === 200 || response.status === 201) {
-                console.log(`✅ SMS successfully sent to ${phoneNumber}`);
-                return true;
-            }
+            return response.status === 200 || response.status === 201;
         } catch (error) {
-            // This will print the specific error from the Traccar Server
-            console.error('❌ Traccar SMS Error Details:', 
-                error.response ? error.response.status : 'No Response', 
-                error.response ? error.response.data : error.message
-            );
+            console.error('❌ Traccar Error:', error.message);
             return false;
         }
+    }
+
+    /**
+     * Fetching for Frontend (from main)
+     */
+    async getUserNotifications(user_id) {
+        return await Notification.findAll({
+            where: { user_id },
+            order: [['created_at', 'DESC']]
+        });
+    }
+
+    async markAsRead(notification_id) {
+        return await Notification.update(
+            { status: 'Read' },
+            { where: { notification_id } }
+        );
     }
 }
 

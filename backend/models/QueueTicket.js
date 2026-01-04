@@ -3,16 +3,12 @@ const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
   class QueueTicket extends Model {
-    /**
-     * Helper method for defining associations.
-     */
     static associate(models) {
-      // Each ticket belongs to ONE User
+      // Associations
       QueueTicket.belongsTo(models.User, {
         foreignKey: 'user_id',
         as: 'user'
       });
-      // Each ticket belongs to ONE Service (e.g., ID Renewal)
       QueueTicket.belongsTo(models.Service, {
         foreignKey: 'service_id',
         as: 'service'
@@ -29,21 +25,33 @@ module.exports = (sequelize, DataTypes) => {
     },
     user_id: {
       type: DataTypes.INTEGER,
-      allowNull: false
+      allowNull: false,
+      references: {
+        model: 'Users',
+        key: 'user_id'
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'CASCADE'
     },
     service_id: {
       type: DataTypes.INTEGER,
-      allowNull: false
+      allowNull: false,
+      references: {
+        model: 'Services',
+        key: 'service_id'
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'CASCADE'
     },
     ticket_number: {
-      type: DataTypes.STRING, // Using STRING for "ID-101" format
+      type: DataTypes.STRING, // Kept as STRING for "ID-101" format
       allowNull: false
     },
-    phone_number: { // New field for Traccar
+    phone_number: { 
       type: DataTypes.STRING,
       allowNull: false
     },
-    position: { // New field for Queue tracking
+    position: { 
       type: DataTypes.INTEGER,
       allowNull: false
     },
@@ -51,16 +59,13 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.ENUM('Waiting', 'Serving', 'Completed', 'Cancelled'),
       defaultValue: 'Waiting',
       allowNull: false
-    },
-    issued_at: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW
     }
   }, {
     sequelize,
     modelName: 'QueueTicket',
     tableName: 'Queue_Tickets',
-    timestamps: false // We use issued_at instead of createdAt/updatedAt
+    underscored: true, // Converts createdAt to created_at automatically
+    timestamps: true   // Using standard Sequelize timestamps for better tracking
   });
 
   return QueueTicket;
