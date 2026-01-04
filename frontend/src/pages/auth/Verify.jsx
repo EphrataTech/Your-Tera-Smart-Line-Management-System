@@ -1,106 +1,184 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { useLocation } from "react-router-dom";
-import Rectangle34 from '../../assets/images/Rectangle34.png';
-import '../../styles/auth.css';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { authAPI } from '../../services/api';
 
-function Verify(){  
-    const location = useLocation();
-    const phone_number = location.state?.phone_number;
+const Verify = () => {
+  const [formData, setFormData] = useState({
+    email: '',
+    code: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-      const [code, setCode] = useState(["", "", "", ""]);
-      const [loading, setLoading] = useState(false);
-
-     const navigate = useNavigate();
-
-    const handleChange = (e, index) => {
-        const value = e.target.value;
-        if (/^\d?$/.test(value)) {  // only allow 0-9 or empty inputs
-        const newCode = [...code];
-        newCode[index] = value;
-        setCode(newCode);
-
-        // auto-focus next input
-        if (value && index < 3) {
-            const nextInput = document.getElementById(`code-${index + 1}`);
-            nextInput.focus();
-        }
-        }
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+    setError('');
   };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
 
-        const otp = code.join(""); // combine 4 digits
-
-        if (otp.length < 4) {
-        alert("Please enter the 4-digit code");
-        return;
-        }
-
-        setLoading(true);
-
-        try {
-        const response = await axios.post(
-            "http://localhost:3000/api/auth/verify-reset-code",
-            { phone_number, code: otp },
-            { headers: { "Content-Type": "application/json" } }
-        );
-
-        const data = response.data;
-
-        setLoading(false);
-
-        if (response.status === 200) {
-            navigate("/reset-password", { state: { phone_number: phone_number, code: otp } });
-        } else {
-            alert(data.error || "Invalid code");
-        }
-
-        } catch (error) {
-        setLoading(false);
-        if (error.response) {
-            alert(error.response.data.error || "Failed to verify code");
-        } else {
-            alert("Server not responding");
-        }
-        }
+    try {
+      await authAPI.verifyResetCode(formData);
+      navigate('/reset-password', { state: { email: formData.email, code: formData.code } });
+    } catch (error) {
+      setError(error.response?.data?.error || 'Invalid or expired code');
+    } finally {
+      setLoading(false);
+    }
   };
 
-
-
-    return(
-      <div className="card-1">
-       <img src={Rectangle34} />
-    
-        <div className="card-2">
-            <h1>Forgot Password</h1>
-            <p>Reset code sent. Check your SMS</p>
-
-          <form className="form-1"   onSubmit={handleSubmit}>
-             <div className="code-inputs">
-              {code.map((c, i) => (
-             <input
-                key={i}
-                id={`code-${i}`}
-                className="code-input"   // match your CSS
-                type="text"
-                maxLength="1"
-                value={c}
-                onChange={(e) => handleChange(e, i)}
-                required
-                />
-            ))}
-             </div>
-          <button type="submit" disabled={loading}>
-            {loading ? "Verifying..." : "Confirm Code"}
-          </button>
-         </form>
-
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(180deg, rgba(62, 129, 139, 1), rgba(5, 63, 71, 1))',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px'
+    }}>
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        padding: '40px',
+        width: '100%',
+        maxWidth: '400px',
+        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)'
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+          <h1 style={{ 
+            color: '#4A868C', 
+            fontSize: '28px', 
+            fontWeight: 'bold',
+            marginBottom: '8px'
+          }}>
+            Verify Code
+          </h1>
+          <p style={{ color: '#666', fontSize: '16px' }}>
+            Enter the verification code sent to your email
+          </p>
         </div>
+
+        {error && (
+          <div style={{
+            backgroundColor: '#fee',
+            color: '#c33',
+            padding: '12px',
+            borderRadius: '6px',
+            marginBottom: '20px',
+            fontSize: '14px'
+          }}>
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '8px', 
+              color: '#4A868C',
+              fontWeight: '500'
+            }}>
+              Email
+            </label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              style={{
+                width: '100%',
+                padding: '12px',
+                border: '2px solid #e1e5e9',
+                borderRadius: '6px',
+                fontSize: '16px',
+                outline: 'none',
+                transition: 'border-color 0.3s'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#4A868C'}
+              onBlur={(e) => e.target.style.borderColor = '#e1e5e9'}
+            />
+          </div>
+
+          <div style={{ marginBottom: '25px' }}>
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '8px', 
+              color: '#4A868C',
+              fontWeight: '500'
+            }}>
+              Verification Code
+            </label>
+            <input
+              type="text"
+              name="code"
+              value={formData.code}
+              onChange={handleChange}
+              required
+              style={{
+                width: '100%',
+                padding: '12px',
+                border: '2px solid #e1e5e9',
+                borderRadius: '6px',
+                fontSize: '16px',
+                outline: 'none',
+                transition: 'border-color 0.3s'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#4A868C'}
+              onBlur={(e) => e.target.style.borderColor = '#e1e5e9'}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: '100%',
+              backgroundColor: loading ? '#ccc' : '#4A868C',
+              color: 'white',
+              padding: '14px',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '16px',
+              fontWeight: '600',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              transition: 'background-color 0.3s'
+            }}
+          >
+            {loading ? 'Verifying...' : 'Verify Code'}
+          </button>
+        </form>
+
+        <div style={{ 
+          textAlign: 'center', 
+          marginTop: '25px',
+          paddingTop: '20px',
+          borderTop: '1px solid #e1e5e9'
+        }}>
+          <p style={{ color: '#666', fontSize: '14px' }}>
+            <Link 
+              to="/forgotpassword" 
+              style={{ 
+                color: '#4A868C', 
+                textDecoration: 'none',
+                fontWeight: '600'
+              }}
+            >
+              Resend Code
+            </Link>
+          </p>
+        </div>
+      </div>
     </div>
-    );
-}
+  );
+};
 
 export default Verify;
