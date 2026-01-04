@@ -1,9 +1,10 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Bell, Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isSticky, setIsSticky] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
@@ -24,9 +25,9 @@ const Navbar = () => {
       </div>
 
       <div className="navbar-links">
-        <Link to="/" className="nav-link">HOME</Link>
-        <Link to="/about" className="nav-link">ABOUT</Link>
-        <Link to="/services" className="nav-link">SERVICES</Link>
+        <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>HOME</Link>
+        <Link to="/about" className={`nav-link ${location.pathname === '/about' ? 'active' : ''}`}>ABOUT</Link>
+        <Link to="/services" className={`nav-link ${location.pathname === '/services' ? 'active' : ''}`}>SERVICES</Link>
         <Bell className="bell"/>
       </div>
 

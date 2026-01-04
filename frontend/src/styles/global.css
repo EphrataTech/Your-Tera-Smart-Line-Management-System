@@ -126,10 +126,22 @@ main {
   color: #666;
   text-decoration: none;
   transition: color 0.3s;
+  position: relative;
+  padding-bottom: 0.5rem;
 }
 
 .nav-link:hover {
   color: #4A868C;
+}
+
+.nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 2rem;
+  height: 2px;
+  background: linear-gradient(90deg, #4A868C, transparent);
 }
 
 .navbar-actions {
