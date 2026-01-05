@@ -51,6 +51,7 @@ const CustomerDashboard = () => {
       const response = await queueAPI.getMyStatus();
       // Handle both array response (when tickets exist) and object response (when no tickets)
       const tickets = Array.isArray(response.data) ? response.data : (response.data.tickets || []);
+      console.log('Fetched tickets:', tickets); // Debug log
       setMyTickets(tickets);
     } catch (error) {
       console.error('Error fetching status:', error);
@@ -84,9 +85,9 @@ const CustomerDashboard = () => {
     }
   };
 
-  const handleCancelTicket = async (ticketId) => {
+  const handleCancelTicket = async (ticketNumber) => {
     try {
-      await queueAPI.cancelTicket(ticketId);
+      await queueAPI.cancelTicket(ticketNumber);
       setMessage('Ticket cancelled successfully');
       fetchMyStatus();
     } catch (error) {
@@ -121,8 +122,17 @@ const CustomerDashboard = () => {
           alignItems: 'center'
         }}>
           <div>
-            <h1 style={{ color: '#4A868C', fontSize: '24px', fontWeight: 'bold' }}>
-              YourTera Dashboard
+            <h1 
+              onClick={() => window.location.href = '/'}
+              style={{ 
+                color: '#4A868C', 
+                fontSize: '24px', 
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                margin: 0
+              }}
+            >
+              YourTera
             </h1>
             <p style={{ color: '#666', margin: 0 }}>Welcome, {user.fullname}</p>
           </div>
@@ -359,14 +369,18 @@ const CustomerDashboard = () => {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <Clock size={16} color="#666" />
                         <span style={{ color: '#666' }}>
-                          Created: {new Date(ticket.createdAt).toLocaleString()}
+                          Created: {(() => {
+                            const date = ticket.createdAt || ticket.created_at || ticket.timestamp;
+                            return date ? new Date(date).toLocaleString() : 'N/A';
+                          })()
+                          }
                         </span>
                       </div>
                     </div>
 
                     {ticket.status === 'Waiting' && (
                       <button
-                        onClick={() => handleCancelTicket(ticket._id)}
+                        onClick={() => handleCancelTicket(ticket.ticket_number)}
                         style={{
                           backgroundColor: '#ef4444',
                           color: 'white',

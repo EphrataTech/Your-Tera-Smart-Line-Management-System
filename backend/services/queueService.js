@@ -104,18 +104,27 @@ class QueueService {
 
     // 3. Cancel Ticket (User side)
     async cancelTicket(ticketNumber, userId) {
-        let userObjectId = userId;
+        // First, find the ticket by ticket number only
+        const ticket = await QueueTicket.findOne({ 
+            ticket_number: ticketNumber
+        });
         
-        // Safely convert to ObjectId if string and valid
-        if (typeof userId === 'string' && mongoose.Types.ObjectId.isValid(userId)) {
-            userObjectId = new mongoose.Types.ObjectId(userId);
+        if (!ticket) {
+            throw new Error('Ticket not found');
         }
 
-        const ticket = await QueueTicket.findOne({ 
-            ticket_number: ticketNumber, 
-            user_id: userObjectId 
-        });
-        if (!ticket) throw new Error('Ticket not found or unauthorized');
+        // Check if the user owns this ticket (try multiple formats)
+        const userIdString = userId.toString();
+        const ticketUserIdString = ticket.user_id.toString();
+        
+        if (userIdString !== ticketUserIdString) {
+            throw new Error('Unauthorized - ticket belongs to different user');
+        }
+
+        // Check if ticket can be cancelled
+        if (ticket.status !== 'Waiting') {
+            throw new Error('Ticket cannot be cancelled - current status: ' + ticket.status);
+        }
 
         ticket.status = 'Cancelled';
         await ticket.save();
@@ -166,7 +175,14 @@ class QueueService {
             user_id: userObjectId,
             status: { $in: ['Waiting', 'Serving'] }
         })
-        .populate('service_id', 'service_name')
+        .populate({
+            path: 'service_id',
+            select: 'service_name office_id',
+            populate: {
+                path: 'office_id',
+                select: 'office_name location'
+            }
+        })
         .sort({ createdAt: -1 });
     }
 
@@ -200,6 +216,29 @@ class QueueService {
             current_serving: tickets.find(t => t.status === 'Serving') || null,
             queue: tickets.filter(t => t.status === 'Waiting')
         };
+    }
+
+    // Get My Tickets with Office and Service Details
+    async getMyTicketsWithDetails(userId) {
+        let userObjectId = userId;
+        
+        // Safely convert to ObjectId if string and valid
+        if (typeof userId === 'string' && mongoose.Types.ObjectId.isValid(userId)) {
+            userObjectId = new mongoose.Types.ObjectId(userId);
+        }
+
+        return await QueueTicket.find({
+            user_id: userObjectId
+        })
+        .populate({
+            path: 'service_id',
+            select: 'service_name office_id',
+            populate: {
+                path: 'office_id',
+                select: 'office_name location'
+            }
+        })
+        .sort({ createdAt: -1 });
     }
 }
 

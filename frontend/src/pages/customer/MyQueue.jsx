@@ -34,15 +34,15 @@ const MyQueue = () => {
     }
   };
 
-  const handleCancelTicket = async (ticketId) => {
+  const handleCancelTicket = async (ticketNumber) => {
     if (!window.confirm('Are you sure you want to cancel this ticket?')) {
       return;
     }
     try {
-      await customerService.cancelTicket(ticketId);
+      await customerService.cancelTicket(ticketNumber);
       fetchMyQueue();
     } catch (err) {
-      alert('Failed to cancel ticket. Please try again.');
+      alert(`Failed to cancel ticket: ${err.response?.data?.error || err.message}`);
       console.error('Error cancelling ticket:', err);
     }
   };
@@ -75,9 +75,9 @@ const MyQueue = () => {
       ) : (
         <div className="tickets-grid">
           {tickets.map((ticket) => (
-            <div key={ticket.ticket_id} className="ticket-card">
+            <div key={ticket._id} className="ticket-card">
               <div className="ticket-header">
-                <h3>{ticket.service_name}</h3>
+                <h3>{ticket.service_id?.service_name || 'Unknown Service'}</h3>
                 <span className={`status-badge status-${ticket.status?.toLowerCase()}`}>
                   {ticket.status}
                 </span>
@@ -91,17 +91,19 @@ const MyQueue = () => {
                   <span className="label">Position in Queue:</span>
                   <span className="value position">{ticket.position || 'N/A'}</span>
                 </div>
-                {ticket.estimatedWaitTime !== undefined && (
-                  <div className="info-row">
-                    <span className="label">Estimated Wait Time:</span>
-                    <span className="value wait-time">{ticket.estimatedWaitTime} minutes</span>
-                  </div>
-                )}
+                <div className="info-row">
+                  <span className="label">Estimated Wait Time:</span>
+                  <span className="value wait-time">{ticket.estimatedWaitTime || 0} minutes</span>
+                </div>
+                <div className="info-row">
+                  <span className="label">Service Type:</span>
+                  <span className="value service-type">{ticket.service_id?.service_name || 'General'}</span>
+                </div>
               </div>
               {ticket.status === 'Waiting' && (
                 <button
                   className="cancel-btn"
-                  onClick={() => handleCancelTicket(ticket.ticket_id)}
+                  onClick={() => handleCancelTicket(ticket.ticket_number)}
                 >
                   Cancel Ticket
                 </button>

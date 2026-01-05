@@ -5,6 +5,7 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Load user from localStorage on mount
   useEffect(() => {
@@ -21,6 +22,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('user');
       }
     }
+    setIsLoading(false);
   }, []);
 
   const login = (userData, token) => {
@@ -46,7 +48,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, isAdmin, isCustomer }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, logout, isAdmin, isCustomer }}>
       {children}
     </AuthContext.Provider>
   );

@@ -7,6 +7,7 @@ const Footer = () => {
         <div className="footer-main">
           <div className="footer-logo">
             <img src="/images/logo.png" alt="YourTera Logo" className="logo-image" />
+            <span className="footer-brand-text">YourTera</span>
           </div>
           <p className="footer-description">
             Digitizing physical queues to reduce waiting time and improve service efficiency for offices, hospitals, and

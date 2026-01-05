@@ -10,7 +10,7 @@ exports.joinQueue = async (req, res) => {
         let phoneNumber = req.body.phone_number || req.body.phoneNumber;
         
         // Use user_id from the verified JWT token (authMiddleware)
-        const userId = req.user.user_id || req.user.id;
+        const userId = req.user.user_id;
 
         if (!serviceId) {
             return res.status(400).json({ error: "service_id is required" });
@@ -42,26 +42,15 @@ exports.joinQueue = async (req, res) => {
 // 2. Get Live Status for Logged-in User (Citizen Dashboard)
 exports.getMyStatus = async (req, res) => {
     try {
-        const userId = req.user.user_id || req.user.id; 
+        const userId = req.user.user_id; 
         const tickets = await queueService.getMyActiveTickets(userId);
 
         if (!tickets || tickets.length === 0) {
             return res.status(200).json({ message: "No active tickets found.", tickets: [] });
         }
 
-        // Map through tickets to add live position data
-        const results = await Promise.all(tickets.map(async (t) => {
-            const liveData = await queueService.getLiveStatus(t._id.toString());
-            return {
-                ticket_id: t._id.toString(),
-                service_name: t.service_id?.service_name || 'Unknown',
-                ticket_number: t.ticket_number,
-                status: t.status,
-                ...liveData
-            };
-        }));
-
-        res.json(results);
+        // Return tickets with populated service and office data
+        res.json(tickets);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -88,10 +77,10 @@ exports.updateStatus = async (req, res) => {
 // 4. Cancel My Ticket (Citizen action)
 exports.cancelMyTicket = async (req, res) => {
     try {
-        const { ticket_id } = req.params;  // This will be the ticket_number (e.g., 'DO-101')
-        const userId = req.user.user_id || req.user.id;
+        const { ticketId } = req.params;
+        const userId = req.user.user_id;
 
-        const result = await queueService.cancelTicket(ticket_id, userId);
+        const result = await queueService.cancelTicket(ticketId, userId);
         res.json(result);
     } catch (error) {
         res.status(400).json({ error: error.message });
@@ -106,5 +95,20 @@ exports.getOfficeQueue = async (req, res) => {
         res.status(200).json(tickets); 
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+};
+
+// 6. Get My Tickets with Office and Service Details
+exports.getMyTickets = async (req, res) => {
+    try {
+        const userId = req.user.user_id;
+        const tickets = await queueService.getMyTicketsWithDetails(userId);
+        
+        res.status(200).json({
+            success: true,
+            tickets
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
     }
 };
