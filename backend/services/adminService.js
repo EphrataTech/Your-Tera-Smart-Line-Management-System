@@ -7,7 +7,7 @@ class AdminService {
 
     async callNext(service_id) {
         const serviceObjectId = mongoose.Types.ObjectId.isValid(service_id) 
-            ? (typeof service_id === 'string' ? mongoose.Types.ObjectId(service_id) : service_id)
+            ? (typeof service_id === 'string' ? new mongoose.Types.ObjectId(service_id) : service_id)
             : service_id;
 
         const nextTicket = await QueueTicket.findOne({
@@ -83,7 +83,7 @@ class AdminService {
 
     async resetQueueForDay(service_id) {
         const serviceObjectId = mongoose.Types.ObjectId.isValid(service_id) 
-            ? (typeof service_id === 'string' ? mongoose.Types.ObjectId(service_id) : service_id)
+            ? (typeof service_id === 'string' ? new mongoose.Types.ObjectId(service_id) : service_id)
             : service_id;
 
         const result = await QueueTicket.deleteMany({ 

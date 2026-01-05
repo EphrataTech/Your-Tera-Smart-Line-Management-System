@@ -20,7 +20,7 @@ class NotificationService {
     async notifyUser(user_id, phoneNumber, message, type = 'SMS') {
         // Convert user_id to ObjectId if needed
         const userObjectId = mongoose.Types.ObjectId.isValid(user_id) 
-            ? (typeof user_id === 'string' ? mongoose.Types.ObjectId(user_id) : user_id)
+            ? (typeof user_id === 'string' ? new mongoose.Types.ObjectId(user_id) : user_id)
             : user_id;
 
         // 1. Create record in Database first
@@ -71,7 +71,7 @@ class NotificationService {
      */
     async getUserNotifications(user_id) {
         const userObjectId = mongoose.Types.ObjectId.isValid(user_id) 
-            ? (typeof user_id === 'string' ? mongoose.Types.ObjectId(user_id) : user_id)
+            ? (typeof user_id === 'string' ? new mongoose.Types.ObjectId(user_id) : user_id)
             : user_id;
 
         return await Notification.find({ user_id: userObjectId })
@@ -91,7 +91,7 @@ class NotificationService {
 
     async createNotification(user_id, message, type = 'InApp') {
         const userObjectId = mongoose.Types.ObjectId.isValid(user_id) 
-            ? (typeof user_id === 'string' ? mongoose.Types.ObjectId(user_id) : user_id)
+            ? (typeof user_id === 'string' ? new mongoose.Types.ObjectId(user_id) : user_id)
             : user_id;
 
         const notification = new Notification({

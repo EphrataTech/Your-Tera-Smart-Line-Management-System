@@ -13,7 +13,7 @@ module.exports = {
 
             const notification = await Notification.create({
                 user_id: mongoose.Types.ObjectId.isValid(user_id) 
-                    ? (typeof user_id === 'string' ? mongoose.Types.ObjectId(user_id) : user_id)
+                    ? (typeof user_id === 'string' ? new mongoose.Types.ObjectId(user_id) : user_id)
                     : user_id,
                 message,
                 type: type || 'InApp',
@@ -38,7 +38,7 @@ module.exports = {
             }
 
             const userObjectId = mongoose.Types.ObjectId.isValid(userId) 
-                ? (typeof userId === 'string' ? mongoose.Types.ObjectId(userId) : userId)
+                ? (typeof userId === 'string' ? new mongoose.Types.ObjectId(userId) : userId)
                 : userId;
 
             const notifications = await Notification.find({ user_id: userObjectId })

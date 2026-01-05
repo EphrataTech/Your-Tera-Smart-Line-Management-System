@@ -88,10 +88,10 @@ exports.updateStatus = async (req, res) => {
 // 4. Cancel My Ticket (Citizen action)
 exports.cancelMyTicket = async (req, res) => {
     try {
-        const { ticketId } = req.params;
+        const { ticket_id } = req.params;  // This will be the ticket_number (e.g., 'DO-101')
         const userId = req.user.user_id || req.user.id;
 
-        const result = await queueService.cancelTicket(ticketId, userId);
+        const result = await queueService.cancelTicket(ticket_id, userId);
         res.json(result);
     } catch (error) {
         res.status(400).json({ error: error.message });

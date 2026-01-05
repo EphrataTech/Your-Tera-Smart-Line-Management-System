@@ -7,12 +7,16 @@ class QueueService {
     // 1. Join Queue (With Smart Ticket Numbering & SMS)
     async joinQueue(userId, serviceId, phoneNumber) {
         // Convert IDs to ObjectId
-        const userObjectId = mongoose.Types.ObjectId.isValid(userId) 
-            ? (typeof userId === 'string' ? mongoose.Types.ObjectId(userId) : userId)
-            : userId;
-        const serviceObjectId = mongoose.Types.ObjectId.isValid(serviceId) 
-            ? (typeof serviceId === 'string' ? mongoose.Types.ObjectId(serviceId) : serviceId)
-            : serviceId;
+        let userObjectId = userId;
+        let serviceObjectId = serviceId;
+        
+        // Safely convert to ObjectId if string and valid
+        if (typeof userId === 'string' && mongoose.Types.ObjectId.isValid(userId)) {
+            userObjectId = new mongoose.Types.ObjectId(userId);
+        }
+        if (typeof serviceId === 'string' && mongoose.Types.ObjectId.isValid(serviceId)) {
+            serviceObjectId = new mongoose.Types.ObjectId(serviceId);
+        }
 
         // Check for active tickets
         const existingTicket = await QueueTicket.findOne({
@@ -98,16 +102,16 @@ class QueueService {
     }
 
     // 3. Cancel Ticket (User side)
-    async cancelTicket(ticketId, userId) {
-        const userObjectId = mongoose.Types.ObjectId.isValid(userId) 
-            ? (typeof userId === 'string' ? mongoose.Types.ObjectId(userId) : userId)
-            : userId;
-        const ticketObjectId = mongoose.Types.ObjectId.isValid(ticketId) 
-            ? (typeof ticketId === 'string' ? mongoose.Types.ObjectId(ticketId) : ticketId)
-            : ticketId;
+    async cancelTicket(ticketNumber, userId) {
+        let userObjectId = userId;
+        
+        // Safely convert to ObjectId if string and valid
+        if (typeof userId === 'string' && mongoose.Types.ObjectId.isValid(userId)) {
+            userObjectId = new mongoose.Types.ObjectId(userId);
+        }
 
         const ticket = await QueueTicket.findOne({ 
-            _id: ticketObjectId, 
+            ticket_number: ticketNumber, 
             user_id: userObjectId 
         });
         if (!ticket) throw new Error('Ticket not found or unauthorized');
@@ -150,9 +154,12 @@ class QueueService {
 
     // 5. Get My Active Tickets (For User Dashboard)
     async getMyActiveTickets(userId) {
-        const userObjectId = mongoose.Types.ObjectId.isValid(userId) 
-            ? (typeof userId === 'string' ? mongoose.Types.ObjectId(userId) : userId)
-            : userId;
+        let userObjectId = userId;
+        
+        // Safely convert to ObjectId if string and valid
+        if (typeof userId === 'string' && mongoose.Types.ObjectId.isValid(userId)) {
+            userObjectId = new mongoose.Types.ObjectId(userId);
+        }
 
         return await QueueTicket.find({
             user_id: userObjectId,
@@ -174,9 +181,12 @@ class QueueService {
 
     // Get queue by service
     async getQueueByService(serviceId) {
-        const serviceObjectId = mongoose.Types.ObjectId.isValid(serviceId) 
-            ? (typeof serviceId === 'string' ? mongoose.Types.ObjectId(serviceId) : serviceId)
-            : serviceId;
+        let serviceObjectId = serviceId;
+        
+        // Safely convert to ObjectId if string and valid
+        if (typeof serviceId === 'string' && mongoose.Types.ObjectId.isValid(serviceId)) {
+            serviceObjectId = new mongoose.Types.ObjectId(serviceId);
+        }
 
         const tickets = await QueueTicket.find({ service_id: serviceObjectId })
             .populate('user_id', 'fullname email phone_number')

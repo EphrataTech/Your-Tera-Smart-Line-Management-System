@@ -37,7 +37,7 @@ module.exports = {
             // 1. Find all users currently in this service's queue BEFORE resetting
             const mongoose = require('mongoose');
             const serviceObjectId = mongoose.Types.ObjectId.isValid(service_id) 
-                ? (typeof service_id === 'string' ? mongoose.Types.ObjectId(service_id) : service_id)
+                ? (typeof service_id === 'string' ? new mongoose.Types.ObjectId(service_id) : service_id)
                 : service_id;
 
             const activeTickets = await QueueTicket.find({ 
