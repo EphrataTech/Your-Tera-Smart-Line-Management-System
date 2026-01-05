@@ -53,6 +53,7 @@ export const adminAPI = {
   getAllTickets: () => api.get('/admin/tickets'),
   getUsers: () => api.get('/admin/users'),
   addService: (data) => api.post('/admin/services', data),
+  addOffice: (data) => api.post('/offices/add', data),
   callNext: (data) => api.patch('/admin/next', data),
   completeTicket: (id) => api.patch(`/admin/complete/${id}`),
   changeUserRole: (userId, data) => api.patch(`/admin/users/${userId}/role`, data),
