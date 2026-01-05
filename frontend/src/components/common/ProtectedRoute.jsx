@@ -1,5 +1,5 @@
-import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { Navigate } from 'react-router-dom';
 
 const ProtectedRoute = ({ children, requiredRole }) => {
   const { isAuthenticated, user } = useAuth();
@@ -9,7 +9,7 @@ const ProtectedRoute = ({ children, requiredRole }) => {
   }
 
   if (requiredRole && user?.role !== requiredRole) {
-    // Redirect based on user role
+    // Redirect based on user's actual role
     if (user?.role === 'Admin') {
       return <Navigate to="/admin/dashboard" replace />;
     } else {
@@ -21,4 +21,3 @@ const ProtectedRoute = ({ children, requiredRole }) => {
 };
 
 export default ProtectedRoute;
-

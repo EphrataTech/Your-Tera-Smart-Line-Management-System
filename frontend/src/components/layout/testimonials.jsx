@@ -1,73 +1,122 @@
-import { useState } from "react";
+import { useState } from "react"
 
 const clients = [
   {
-    id: "gov",
-    title: "Government Service Officer",
+    id: 1,
+    role: "Government Service Officer",
     location: "Addis Ababa, Ethiopia",
-    quote: "Before using this system, our queues were chaotic. Now everything is organized, digital, and transparent",
-    author: "Henok T., Revenue Officer",
-    avatar: "/images/testimonal1.png",
   },
   {
-    id: "telecom",
-    title: "Telecom Customer Support Agent",
+    id: 2,
+    role: "Telecom Customer Support Agent",
     location: "Hawassa, Ethiopia",
-    quote: "The real-time notifications have transformed how we handle peak hours. Our customers are much happier now.",
-    author: "Sara M., Support Agent",
-    avatar: "/images/testimonal2.png",
   },
   {
-    id: "student",
-    title: "AAU Student",
+    id: 3,
+    role: "AAU Student",
     location: "Addis Ababa, Ethiopia",
-    quote: "I can now check my position in the queue from my phone. No more wasting hours standing in line.",
-    author: "Abebe K., Student",
-    avatar: "/images/testimonal2.png",
   },
-];
+]
 
-const Testimonials = () => {
-  const [activeTab, setActiveTab] = useState("gov");
-  const activeClient = clients.find((c) => c.id === activeTab);
+const testimonials = [
+  {
+    id: 1,
+    text: "Before using this system, our queues were chaotic. Now everything is organized, digital, and transparent",
+    author: "Henok T.",
+    role: "Revenue Officer",
+    avatar: "/professional-ethiopian-man.jpg",
+  },
+  {
+    id: 2,
+    text: "The digital transformation has been incredible. Our customers are happier and wait times have decreased by 60%",
+    author: "Sarah M.",
+    role: "Service Manager",
+    avatar: "/professional-ethiopian-woman.jpg",
+  },
+  {
+    id: 3,
+    text: "As a student, this system makes accessing university services so much easier. No more standing in long lines!",
+    author: "Daniel K.",
+    role: "Computer Science Student",
+    avatar: "/young-ethiopian-student.jpg",
+  },
+]
+
+export function Testimonials() {
+  const [activeClient, setActiveClient] = useState(0)
 
   return (
     <section className="testimonials">
-      <div className="testimonials-container">
-        <h2 className="testimonials-title">Hear From Our Happy Clients</h2>
-
-        <div className="testimonials-content">
-          <div className="testimonials-tabs">
-            {clients.map((client) => (
-              <button
-                key={client.id}
-                onClick={() => setActiveTab(client.id)}
-                className={`testimonial-tab ${activeTab === client.id ? 'active' : ''}`}
-              >
-                <h4>{client.title}</h4>
-                <p className="tab-location">{client.location}</p>
-              </button>
-            ))}
-          </div>
-
-          <div className="testimonial-display">
-            <div className="testimonial-quote">
-              <p className="quote-text">"{activeClient.quote}"</p>
-              <div className="quote-author">
-                <div className="author-avatar">
-                  <img
-                    src={activeClient.avatar || "/placeholder.svg"}
-                    alt={activeClient.author}
-                  />
+      <div className="testimonials-wrapper">
+        <div className="testimonials-top-line"></div>
+        <div className="testimonials-container">
+          <h2 className="testimonials-title">Hear From Our Happy Clients</h2>
+          
+          <div className="testimonials-content">
+            {/* Left side - Client profiles */}
+            <div className="testimonials-tabs">
+              {clients.map((client, index) => (
+                <div key={client.id}>
+                  <button
+                    onClick={() => setActiveClient(index)}
+                    className={`testimonial-tab ${index === activeClient ? 'active' : ''}`}
+                  >
+                    <div className="tab-title">{client.role}</div>
+                    <div className="tab-location">{client.location}</div>
+                  </button>
+                  {index < clients.length - 1 && <div className="tab-divider"></div>}
                 </div>
-                <p className="author-name">{activeClient.author}</p>
+              ))}
+            </div>
+
+            {/* Right side - Testimonial */}
+            <div className="testimonial-display">
+              <div className="testimonial-quote">
+                <blockquote className="quote-text">
+                  "{testimonials[activeClient].text}"
+                </blockquote>
+
+                <div className="quote-author">
+                  <div className="author-avatar">
+                    <img
+                      src={testimonials[activeClient].avatar || "/placeholder.svg"}
+                      alt={testimonials[activeClient].author}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                    <div 
+                      style={{
+                        display: 'none',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: '#4A868C',
+                        color: 'white',
+                        fontWeight: 'bold',
+                        fontSize: '1.2rem'
+                      }}
+                    >
+                      {testimonials[activeClient].author
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="author-name">{testimonials[activeClient].author}</div>
+                    <div style={{ fontSize: '0.9rem', color: '#4A868C', opacity: 0.8 }}>
+                      {testimonials[activeClient].role}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
     </section>
-  );
-};
-
-export default Testimonials;
+  )
+}
