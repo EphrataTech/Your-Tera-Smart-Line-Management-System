@@ -21,22 +21,49 @@ const AdminDashboard = () => {
     avg_wait_time: ''
   });
 
+  // Calculate analytics from tickets data
+  const calculateAnalytics = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const todayTickets = tickets.filter(ticket => {
+      const ticketDate = new Date(ticket.createdAt);
+      return ticketDate >= today && ticketDate < tomorrow;
+    });
+
+    const completedToday = tickets.filter(ticket => {
+      const updatedDate = new Date(ticket.updatedAt);
+      return ticket.status === 'Completed' && updatedDate >= today && updatedDate < tomorrow;
+    });
+
+    return {
+      totalTickets: todayTickets.length,
+      waitingTickets: tickets.filter(t => t.status === 'Waiting').length,
+      servingTickets: tickets.filter(t => t.status === 'Serving').length,
+      completedTickets: completedToday.length
+    };
+  };
+
+  // Update analytics whenever tickets change
   useEffect(() => {
-    fetchAnalytics();
+    if (tickets.length >= 0) {
+      const calculatedAnalytics = calculateAnalytics();
+      setAnalytics(calculatedAnalytics);
+    }
+  }, [tickets]);
+
+  useEffect(() => {
     fetchTickets();
     fetchUsers();
     fetchOffices();
     fetchServices();
+    
+    // Refresh tickets every 30 seconds
+    const interval = setInterval(fetchTickets, 30000);
+    return () => clearInterval(interval);
   }, []);
-
-  const fetchAnalytics = async () => {
-    try {
-      const response = await adminAPI.getAnalytics();
-      setAnalytics(response.data);
-    } catch (error) {
-      console.error('Error fetching analytics:', error);
-    }
-  };
 
   const fetchTickets = async () => {
     try {
@@ -79,8 +106,7 @@ const AdminDashboard = () => {
     try {
       await adminAPI.callNext({});
       setMessage('Next customer called successfully');
-      fetchTickets();
-      fetchAnalytics();
+      fetchTickets(); // This will trigger analytics recalculation
     } catch (error) {
       setMessage(error.response?.data?.error || 'Failed to call next customer');
     } finally {
@@ -92,8 +118,7 @@ const AdminDashboard = () => {
     try {
       await adminAPI.completeTicket(ticketId);
       setMessage('Ticket completed successfully');
-      fetchTickets();
-      fetchAnalytics();
+      fetchTickets(); // This will trigger analytics recalculation
     } catch (error) {
       setMessage(error.response?.data?.error || 'Failed to complete ticket');
     }
@@ -103,7 +128,7 @@ const AdminDashboard = () => {
     try {
       await adminAPI.updateTicketStatus(ticketId, { status });
       setMessage(`Ticket status updated to ${status}`);
-      fetchTickets();
+      fetchTickets(); // This will trigger analytics recalculation
     } catch (error) {
       setMessage(error.response?.data?.error || 'Failed to update ticket status');
     }
