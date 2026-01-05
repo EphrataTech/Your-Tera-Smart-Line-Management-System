@@ -522,18 +522,17 @@ main {
   margin: 0 auto;
   padding: 0;
   position: relative;
-  border: 2px dashed #ADD8E6;
-  border-radius: 0.5rem;
   background-color: white;
 }
 
 .testimonials-top-line {
-  width: 100%;
+  width: 60%;
   height: 2px;
-  background-color: #4A868C;
+  background: linear-gradient(90deg, transparent 0%, #4A868C 20%, #4A868C 80%, transparent 100%);
   position: absolute;
   top: 0;
-  left: 0;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .testimonials-container {
