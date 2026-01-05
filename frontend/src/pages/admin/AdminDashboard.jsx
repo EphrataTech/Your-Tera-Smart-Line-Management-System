@@ -13,30 +13,66 @@ const AdminDashboard = () => {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+
+  // New office form
+  const [newOffice, setNewOffice] = useState({
+    office_name: '',
+    location: ''
+  });
 
   // New service form
   const [newService, setNewService] = useState({
     office_id: '',
     service_name: '',
-    avg_wait_time: ''
+    avg_wait_time: '',
+    required_documents: ['']
   });
 
+  // Calculate analytics from tickets data
+  const calculateAnalytics = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const todayTickets = tickets.filter(ticket => {
+      const ticketDate = new Date(ticket.createdAt);
+      return ticketDate >= today && ticketDate < tomorrow;
+    });
+
+    const completedToday = tickets.filter(ticket => {
+      const updatedDate = new Date(ticket.updatedAt);
+      return ticket.status === 'Completed' && updatedDate >= today && updatedDate < tomorrow;
+    });
+
+    return {
+      totalTickets: todayTickets.length,
+      waitingTickets: tickets.filter(t => t.status === 'Waiting').length,
+      servingTickets: tickets.filter(t => t.status === 'Serving').length,
+      completedTickets: completedToday.length
+    };
+  };
+
+  // Update analytics whenever tickets change
   useEffect(() => {
-    fetchAnalytics();
+    if (tickets.length >= 0) {
+      const calculatedAnalytics = calculateAnalytics();
+      setAnalytics(calculatedAnalytics);
+    }
+  }, [tickets]);
+
+  useEffect(() => {
     fetchTickets();
     fetchUsers();
     fetchOffices();
     fetchServices();
+    
+    // Refresh tickets every 30 seconds
+    const interval = setInterval(fetchTickets, 30000);
+    return () => clearInterval(interval);
   }, []);
-
-  const fetchAnalytics = async () => {
-    try {
-      const response = await adminAPI.getAnalytics();
-      setAnalytics(response.data);
-    } catch (error) {
-      console.error('Error fetching analytics:', error);
-    }
-  };
 
   const fetchTickets = async () => {
     try {
@@ -79,8 +115,7 @@ const AdminDashboard = () => {
     try {
       await adminAPI.callNext({});
       setMessage('Next customer called successfully');
-      fetchTickets();
-      fetchAnalytics();
+      fetchTickets(); // This will trigger analytics recalculation
     } catch (error) {
       setMessage(error.response?.data?.error || 'Failed to call next customer');
     } finally {
@@ -92,8 +127,7 @@ const AdminDashboard = () => {
     try {
       await adminAPI.completeTicket(ticketId);
       setMessage('Ticket completed successfully');
-      fetchTickets();
-      fetchAnalytics();
+      fetchTickets(); // This will trigger analytics recalculation
     } catch (error) {
       setMessage(error.response?.data?.error || 'Failed to complete ticket');
     }
@@ -103,9 +137,24 @@ const AdminDashboard = () => {
     try {
       await adminAPI.updateTicketStatus(ticketId, { status });
       setMessage(`Ticket status updated to ${status}`);
-      fetchTickets();
+      fetchTickets(); // This will trigger analytics recalculation
     } catch (error) {
       setMessage(error.response?.data?.error || 'Failed to update ticket status');
+    }
+  };
+
+  const handleAddOffice = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await adminAPI.addOffice(newOffice);
+      setMessage('Office added successfully');
+      setNewOffice({ office_name: '', location: '' });
+      fetchOffices();
+    } catch (error) {
+      setMessage(error.response?.data?.error || 'Failed to add office');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -115,7 +164,7 @@ const AdminDashboard = () => {
     try {
       await adminAPI.addService(newService);
       setMessage('Service added successfully');
-      setNewService({ office_id: '', service_name: '', avg_wait_time: '' });
+      setNewService({ office_id: '', service_name: '', avg_wait_time: '', required_documents: [''] });
       fetchServices();
     } catch (error) {
       setMessage(error.response?.data?.error || 'Failed to add service');
@@ -133,6 +182,14 @@ const AdminDashboard = () => {
       setMessage(error.response?.data?.error || 'Failed to update user role');
     }
   };
+
+  // Filter tickets based on date and status
+  const filteredTickets = tickets.filter(ticket => {
+    const ticketDate = new Date(ticket.createdAt).toISOString().split('T')[0];
+    const matchesDate = !dateFilter || ticketDate === dateFilter;
+    const matchesStatus = !statusFilter || ticket.status === statusFilter;
+    return matchesDate && matchesStatus;
+  });
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -170,7 +227,12 @@ const AdminDashboard = () => {
       <header style={{
         backgroundColor: 'white',
         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        padding: '1rem 0'
+        padding: '1rem 0',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000
       }}>
         <div style={{
           maxWidth: '1400px',
@@ -219,14 +281,24 @@ const AdminDashboard = () => {
         </div>
       </header>
 
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '2rem 1.5rem' }}>
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '2rem 1.5rem', paddingTop: '180px' }}>
         {/* Navigation Tabs */}
         <div style={{
           display: 'flex',
           gap: '1rem',
           marginBottom: '2rem',
           borderBottom: '2px solid #e5e7eb',
-          overflowX: 'auto'
+          overflowX: 'auto',
+          position: 'fixed',
+          top: '90px',
+          left: 0,
+          right: 0,
+          backgroundColor: 'white',
+          zIndex: 999,
+          padding: '1rem 1.5rem',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          maxWidth: '1400px',
+          margin: '0 auto'
         }}>
           {[
             { key: 'overview', label: 'Overview', icon: BarChart3 },
@@ -323,7 +395,44 @@ const AdminDashboard = () => {
           <div>
             <h2 style={{ color: '#4A868C', marginBottom: '1.5rem' }}>Queue Management</h2>
             
-            {tickets.length === 0 ? (
+            {/* Filters */}
+            <div className="filter-container">
+              <div className="filter-row">
+                <div className="filter-group">
+                  <label className="filter-label">Filter by Date</label>
+                  <input
+                    type="date"
+                    value={dateFilter}
+                    onChange={(e) => setDateFilter(e.target.value)}
+                    className="filter-date-input"
+                    placeholder="Select date"
+                  />
+                </div>
+                <div className="filter-group">
+                  <label className="filter-label">Filter by Status</label>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="filter-select"
+                  >
+                    <option value="">All Statuses</option>
+                    <option value="Waiting">Waiting</option>
+                    <option value="Serving">Serving</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                  </select>
+                </div>
+                <button
+                  onClick={() => { setDateFilter(''); setStatusFilter(''); }}
+                  className="clear-filters-btn"
+                  title="Clear all filters"
+                >
+                  Clear Filters
+                </button>
+              </div>
+            </div>
+            
+            {filteredTickets.length === 0 ? (
               <div style={{
                 backgroundColor: 'white',
                 borderRadius: '12px',
@@ -336,7 +445,7 @@ const AdminDashboard = () => {
               </div>
             ) : (
               <div style={{ display: 'grid', gap: '1rem' }}>
-                {tickets.map(ticket => (
+                {filteredTickets.map(ticket => (
                   <div
                     key={ticket._id}
                     style={{
@@ -366,6 +475,11 @@ const AdminDashboard = () => {
                         <p style={{ color: '#666', margin: 0 }}>
                           Service: {ticket.service_id?.service_name || 'N/A'}
                         </p>
+                        {ticket.service_id?.required_documents && (
+                          <p style={{ color: '#666', margin: 0, fontSize: '0.9rem' }}>
+                            Required: {Array.isArray(ticket.service_id.required_documents) ? ticket.service_id.required_documents.join(', ') : ticket.service_id.required_documents}
+                          </p>
+                        )}
                       </div>
                       <div style={{
                         backgroundColor: getStatusColor(ticket.status),
@@ -445,6 +559,67 @@ const AdminDashboard = () => {
           <div>
             <h2 style={{ color: '#4A868C', marginBottom: '1.5rem' }}>Service Management</h2>
             
+            {/* Add New Office */}
+            <div style={{
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              padding: '2rem',
+              marginBottom: '2rem',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+            }}>
+              <h3 style={{ color: '#4A868C', marginBottom: '1rem' }}>Add New Office</h3>
+              <form onSubmit={handleAddOffice} style={{ display: 'flex', gap: '1rem', alignItems: 'end' }}>
+                <div style={{ flex: 1 }}>
+                  <input
+                    type="text"
+                    placeholder="Office Name"
+                    value={newOffice.office_name}
+                    onChange={(e) => setNewOffice({ ...newOffice, office_name: e.target.value })}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      border: '2px solid #e1e5e9',
+                      borderRadius: '6px',
+                      fontSize: '16px'
+                    }}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <input
+                    type="text"
+                    placeholder="Location"
+                    value={newOffice.location}
+                    onChange={(e) => setNewOffice({ ...newOffice, location: e.target.value })}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      border: '2px solid #e1e5e9',
+                      borderRadius: '6px',
+                      fontSize: '16px'
+                    }}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  style={{
+                    backgroundColor: loading ? '#ccc' : '#10b981',
+                    color: 'white',
+                    padding: '12px 24px',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    fontWeight: '600',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  Add Office
+                </button>
+              </form>
+            </div>
+
             {/* Add New Service */}
             <div style={{
               backgroundColor: 'white',
@@ -454,51 +629,117 @@ const AdminDashboard = () => {
               boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
             }}>
               <h3 style={{ color: '#4A868C', marginBottom: '1rem' }}>Add New Service</h3>
-              <form onSubmit={handleAddService} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-                <select
-                  value={newService.office_id}
-                  onChange={(e) => setNewService({ ...newService, office_id: e.target.value })}
-                  required
-                  style={{
-                    padding: '12px',
-                    border: '2px solid #e1e5e9',
-                    borderRadius: '6px',
-                    fontSize: '16px'
-                  }}
-                >
-                  <option value="">Select Office</option>
-                  {offices.map(office => (
-                    <option key={office._id} value={office._id}>
-                      {office.office_name}
-                    </option>
+              <form onSubmit={handleAddService} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                  <select
+                    value={newService.office_id}
+                    onChange={(e) => setNewService({ ...newService, office_id: e.target.value })}
+                    required
+                    style={{
+                      padding: '12px',
+                      border: '2px solid #e1e5e9',
+                      borderRadius: '6px',
+                      fontSize: '16px'
+                    }}
+                  >
+                    <option value="">Select Office</option>
+                    {offices.map(office => (
+                      <option key={office._id} value={office._id}>
+                        {office.office_name}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="Service Name"
+                    value={newService.service_name}
+                    onChange={(e) => setNewService({ ...newService, service_name: e.target.value })}
+                    required
+                    style={{
+                      padding: '12px',
+                      border: '2px solid #e1e5e9',
+                      borderRadius: '6px',
+                      fontSize: '16px'
+                    }}
+                  />
+                  <input
+                    type="number"
+                    placeholder="Avg Wait Time (min)"
+                    value={newService.avg_wait_time}
+                    onChange={(e) => setNewService({ ...newService, avg_wait_time: e.target.value })}
+                    required
+                    style={{
+                      padding: '12px',
+                      border: '2px solid #e1e5e9',
+                      borderRadius: '6px',
+                      fontSize: '16px'
+                    }}
+                  />
+                </div>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxWidth: '400px' }}>
+                  <label style={{ color: '#4A868C', fontWeight: '500' }}>Required Documents</label>
+                  {newService.required_documents.map((doc, index) => (
+                    <div key={index} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      <input
+                        type="text"
+                        placeholder={`Document ${index + 1}`}
+                        value={doc}
+                        onChange={(e) => {
+                          const updatedDocs = [...newService.required_documents];
+                          updatedDocs[index] = e.target.value;
+                          setNewService({ ...newService, required_documents: updatedDocs });
+                        }}
+                        required
+                        style={{
+                          padding: '12px',
+                          border: '2px solid #e1e5e9',
+                          borderRadius: '6px',
+                          fontSize: '16px',
+                          flex: 1
+                        }}
+                      />
+                      {newService.required_documents.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updatedDocs = newService.required_documents.filter((_, i) => i !== index);
+                            setNewService({ ...newService, required_documents: updatedDocs });
+                          }}
+                          style={{
+                            backgroundColor: '#ef4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            padding: '8px 12px',
+                            cursor: 'pointer',
+                            minWidth: '70px'
+                          }}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
                   ))}
-                </select>
-                <input
-                  type="text"
-                  placeholder="Service Name"
-                  value={newService.service_name}
-                  onChange={(e) => setNewService({ ...newService, service_name: e.target.value })}
-                  required
-                  style={{
-                    padding: '12px',
-                    border: '2px solid #e1e5e9',
-                    borderRadius: '6px',
-                    fontSize: '16px'
-                  }}
-                />
-                <input
-                  type="number"
-                  placeholder="Avg Wait Time (min)"
-                  value={newService.avg_wait_time}
-                  onChange={(e) => setNewService({ ...newService, avg_wait_time: e.target.value })}
-                  required
-                  style={{
-                    padding: '12px',
-                    border: '2px solid #e1e5e9',
-                    borderRadius: '6px',
-                    fontSize: '16px'
-                  }}
-                />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewService({ ...newService, required_documents: [...newService.required_documents, ''] });
+                    }}
+                    style={{
+                      backgroundColor: '#10b981',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      padding: '8px 16px',
+                      cursor: 'pointer',
+                      alignSelf: 'flex-start'
+                    }}
+                  >
+                    Add Document
+                  </button>
+                </div>
+                
                 <button
                   type="submit"
                   disabled={loading}
@@ -509,7 +750,8 @@ const AdminDashboard = () => {
                     border: 'none',
                     borderRadius: '6px',
                     cursor: loading ? 'not-allowed' : 'pointer',
-                    fontWeight: '600'
+                    fontWeight: '600',
+                    alignSelf: 'flex-start'
                   }}
                 >
                   Add Service
@@ -539,6 +781,9 @@ const AdminDashboard = () => {
                       </p>
                       <p style={{ color: '#666', margin: 0 }}>
                         Average Wait Time: {service.avg_wait_time} minutes
+                      </p>
+                      <p style={{ color: '#666', margin: 0 }}>
+                        Required Documents: {Array.isArray(service.required_documents) ? service.required_documents.join(', ') : service.required_documents || 'N/A'}
                       </p>
                     </div>
                     <div style={{
@@ -586,16 +831,10 @@ const AdminDashboard = () => {
                       <select
                         value={user.role}
                         onChange={(e) => handleChangeUserRole(user._id, e.target.value)}
-                        style={{
-                          padding: '8px 12px',
-                          border: '2px solid #e1e5e9',
-                          borderRadius: '6px',
-                          fontSize: '14px'
-                        }}
+                        className="user-role-select"
                       >
                         <option value="Customer">Customer</option>
                         <option value="Admin">Admin</option>
-                        <option value="Student">Student</option>
                       </select>
                     </div>
                   </div>

@@ -175,6 +175,20 @@ const Services = () => {
                             </div>
                           </div>
 
+                          {service.required_documents && (
+                            <div style={{ marginBottom: '1rem' }}>
+                              <h4 style={{ color: '#4A868C', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Required Documents:</h4>
+                              <ul style={{ margin: 0, paddingLeft: '1rem', color: '#666', fontSize: '0.85rem' }}>
+                                {Array.isArray(service.required_documents) 
+                                  ? service.required_documents.map((doc, index) => (
+                                      <li key={index} style={{ marginBottom: '0.25rem' }}>{doc}</li>
+                                    ))
+                                  : <li>{service.required_documents}</li>
+                                }
+                              </ul>
+                            </div>
+                          )}
+
                           <button
                             onClick={handleJoinQueue}
                             disabled={!service.is_active}
