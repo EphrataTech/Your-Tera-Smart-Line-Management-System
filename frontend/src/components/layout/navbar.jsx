@@ -17,9 +17,17 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   
+  const handleLogoClick = () => {
+    if (location.pathname === '/') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      navigate('/');
+    }
+  };
+  
   return (
     <nav className={`navbar ${isSticky ? 'navbar-sticky' : ''}`}>
-      <div className="navbar-brand">
+      <div className="navbar-brand" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
         <img src="/images/logo.png" alt="YourTera Logo" className="logo-image" />
         <span className="brand-text">YourTera</span>
       </div>
