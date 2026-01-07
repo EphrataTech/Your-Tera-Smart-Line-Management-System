@@ -12,7 +12,7 @@ const Services = () => {
   const [offices, setOffices] = useState([]);
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [joinLoading, setJoinLoading] = useState(false);
+  const [joinLoading, setJoinLoading] = useState(null); // Track which service is loading
   const [message, setMessage] = useState('');
   const [showTicketModal, setShowTicketModal] = useState(false);
   const [showDocumentsModal, setShowDocumentsModal] = useState(false);
@@ -64,7 +64,7 @@ const Services = () => {
   const confirmJoinQueue = async () => {
     if (!selectedServiceForJoin) return;
 
-    setJoinLoading(true);
+    setJoinLoading(selectedServiceForJoin._id); // Set loading for specific service
     setShowDocumentsModal(false);
     try {
       const response = await queueAPI.joinQueue({
@@ -78,7 +78,7 @@ const Services = () => {
     } catch (error) {
       setMessage(error.response?.data?.error || 'Failed to join queue');
     } finally {
-      setJoinLoading(false);
+      setJoinLoading(null); // Clear loading state
     }
   };
 
@@ -300,80 +300,84 @@ const Services = () => {
 };
 
 // Service Card Component
-const ServiceCard = ({ service, handleJoinQueue, joinLoading, user }) => (
-  <div
-    style={{
-      backgroundColor: '#f8f9fa',
-      padding: '1.5rem',
-      borderRadius: '8px',
-      border: '1px solid #e5e7eb'
-    }}
-  >
-    <h3 style={{ 
-      color: '#4A868C', 
-      fontSize: '1.2rem',
-      marginBottom: '1rem'
-    }}>
-      {service.service_name}
-    </h3>
-    
-    <div style={{ 
-      display: 'flex', 
-      alignItems: 'center', 
-      gap: '1rem',
-      marginBottom: '1rem',
-      color: '#666'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <Clock size={16} />
-        <span>~{service.avg_wait_time} min wait</span>
-      </div>
-      <div style={{
-        backgroundColor: service.is_active ? '#10b981' : '#ef4444',
-        color: 'white',
-        padding: '2px 8px',
-        borderRadius: '12px',
-        fontSize: '12px',
-        fontWeight: '500'
-      }}>
-        {service.is_active ? 'Active' : 'Inactive'}
-      </div>
-    </div>
-
-    {service.required_documents && (
-      <div style={{ marginBottom: '1rem' }}>
-        <h4 style={{ color: '#4A868C', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Required Documents:</h4>
-        <ul style={{ margin: 0, paddingLeft: '1rem', color: '#666', fontSize: '0.85rem' }}>
-          {Array.isArray(service.required_documents) 
-            ? service.required_documents.map((doc, index) => (
-                <li key={index} style={{ marginBottom: '0.25rem' }}>{doc}</li>
-              ))
-            : <li>{service.required_documents}</li>
-          }
-        </ul>
-      </div>
-    )}
-
-    <button
-      onClick={() => handleJoinQueue(service)}
-      disabled={!service.is_active || joinLoading}
+const ServiceCard = ({ service, handleJoinQueue, joinLoading, user }) => {
+  const isLoading = joinLoading === service._id; // Check if this specific service is loading
+  
+  return (
+    <div
       style={{
-        backgroundColor: !service.is_active ? '#ccc' : joinLoading ? '#999' : '#4A868C',
-        color: 'white',
-        padding: '10px 20px',
-        border: 'none',
-        borderRadius: '6px',
-        cursor: !service.is_active || joinLoading ? 'not-allowed' : 'pointer',
-        fontWeight: '600',
-        width: '100%'
+        backgroundColor: '#f8f9fa',
+        padding: '1.5rem',
+        borderRadius: '8px',
+        border: '1px solid #e5e7eb'
       }}
     >
-      {!service.is_active ? 'Service Unavailable' : 
-       joinLoading ? 'Joining...' : 
-       user ? 'Join Queue' : 'Sign Up to Join'}
-    </button>
-  </div>
-);
+      <h3 style={{ 
+        color: '#4A868C', 
+        fontSize: '1.2rem',
+        marginBottom: '1rem'
+      }}>
+        {service.service_name}
+      </h3>
+      
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: '1rem',
+        marginBottom: '1rem',
+        color: '#666'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Clock size={16} />
+          <span>~{service.avg_wait_time} min wait</span>
+        </div>
+        <div style={{
+          backgroundColor: service.is_active ? '#10b981' : '#ef4444',
+          color: 'white',
+          padding: '2px 8px',
+          borderRadius: '12px',
+          fontSize: '12px',
+          fontWeight: '500'
+        }}>
+          {service.is_active ? 'Active' : 'Inactive'}
+        </div>
+      </div>
+
+      {service.required_documents && (
+        <div style={{ marginBottom: '1rem' }}>
+          <h4 style={{ color: '#4A868C', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Required Documents:</h4>
+          <ul style={{ margin: 0, paddingLeft: '1rem', color: '#666', fontSize: '0.85rem' }}>
+            {Array.isArray(service.required_documents) 
+              ? service.required_documents.map((doc, index) => (
+                  <li key={index} style={{ marginBottom: '0.25rem' }}>{doc}</li>
+                ))
+              : <li>{service.required_documents}</li>
+            }
+          </ul>
+        </div>
+      )}
+
+      <button
+        onClick={() => handleJoinQueue(service)}
+        disabled={!service.is_active || isLoading}
+        style={{
+          backgroundColor: !service.is_active ? '#ccc' : isLoading ? '#999' : '#4A868C',
+          color: 'white',
+          padding: '10px 20px',
+          border: 'none',
+          borderRadius: '6px',
+          cursor: !service.is_active || isLoading ? 'not-allowed' : 'pointer',
+          fontWeight: '600',
+          width: '100%'
+        }}
+      >
+        {!service.is_active ? 'Service Unavailable' : 
+         isLoading ? 'Joining...' : 
+         user ? 'Join Queue' : 'Sign Up to Join'}
+      </button>
+    </div>
+  );
+};
 
 // Required Documents Modal Component
 const DocumentsModal = ({ service, onConfirm, onClose }) => {
