@@ -52,6 +52,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('tokenExpiry');
+    window.location.href = '/'; // Navigate to home page after logout
   };
 
   const isAdmin = () => {
