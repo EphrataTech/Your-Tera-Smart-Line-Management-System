@@ -86,6 +86,9 @@ module.exports = {
             if (error.code === 11000) {
                 // Duplicate key error
                 const field = Object.keys(error.keyPattern)[0];
+                if (field === 'phone_number') {
+                    return res.status(400).json({ error: "Phone number already registered" });
+                }
                 return res.status(400).json({ error: `${field} already exists` });
             }
             res.status(500).json({ error: error.message });
