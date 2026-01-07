@@ -64,7 +64,6 @@ export const adminAPI = {
   deleteOffice: (officeId) => api.delete(`/offices/${officeId}`),
   updateService: (serviceId, data) => api.patch(`/admin/services/${serviceId}`, data),
   deleteService: (serviceId) => api.delete(`/admin/services/${serviceId}`),
-  callNext: (data) => api.patch('/admin/next', data),
   completeTicket: (id) => api.patch(`/admin/complete/${id}`),
   changeUserRole: (userId, data) => api.patch(`/admin/users/${userId}/role`, data),
   updateTicketStatus: (ticketId, data) => api.patch(`/admin/tickets/${ticketId}/status`, data),

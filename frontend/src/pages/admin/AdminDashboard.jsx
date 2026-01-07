@@ -120,19 +120,6 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleCallNext = async () => {
-    setLoading(true);
-    try {
-      await adminAPI.callNext({});
-      setMessage('Next customer called successfully');
-      fetchTickets(); // This will trigger analytics recalculation
-    } catch (error) {
-      setMessage(error.response?.data?.error || 'Failed to call next customer');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleCompleteTicket = async (ticketId) => {
     try {
       await adminAPI.completeTicket(ticketId);
@@ -351,21 +338,6 @@ const AdminDashboard = () => {
             <p style={{ color: '#666', margin: 0 }}>Welcome, {user.fullname}</p>
           </div>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <button
-              onClick={handleCallNext}
-              disabled={loading}
-              style={{
-                backgroundColor: loading ? '#ccc' : '#10b981',
-                color: 'white',
-                padding: '10px 20px',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                fontWeight: '600'
-              }}
-            >
-              {loading ? 'Calling...' : 'Call Next'}
-            </button>
             <button
               onClick={logout}
               style={{

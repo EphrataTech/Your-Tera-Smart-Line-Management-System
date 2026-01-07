@@ -5,23 +5,6 @@ const mongoose = require('mongoose');
 class AdminService {
     // --- CORE QUEUE ACTIONS (from develop) ---
 
-    async callNext(service_id) {
-        const serviceObjectId = mongoose.Types.ObjectId.isValid(service_id) 
-            ? (typeof service_id === 'string' ? new mongoose.Types.ObjectId(service_id) : service_id)
-            : service_id;
-
-        const nextTicket = await QueueTicket.findOne({
-            service_id: serviceObjectId,
-            status: 'Waiting'
-        }).sort({ position: 1 });
-
-        if (!nextTicket) throw new Error('No customers waiting for this service.');
-
-        nextTicket.status = 'Serving';
-        await nextTicket.save();
-        return nextTicket;
-    }
-
     async completeTicket(ticket_id) {
         if (!mongoose.Types.ObjectId.isValid(ticket_id)) {
             throw new Error('Invalid ticket ID format');

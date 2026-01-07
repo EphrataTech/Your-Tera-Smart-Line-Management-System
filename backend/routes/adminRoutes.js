@@ -12,7 +12,6 @@ router.get('/users', verifyToken, roleMiddleware('Admin'), adminController.getUs
 
 router.post('/services', verifyToken, roleMiddleware('Admin'), adminController.addService);
 
-router.patch('/next', verifyToken, roleMiddleware('Admin'), adminController.callNext);
 router.patch('/complete/:id', verifyToken, roleMiddleware('Admin'), adminController.completeTicket);
 router.patch('/users/:user_id/role', verifyToken, roleMiddleware('Admin'), adminController.changeRole);
 router.patch('/services/:service_id', verifyToken, roleMiddleware('Admin'), adminController.patchService);
