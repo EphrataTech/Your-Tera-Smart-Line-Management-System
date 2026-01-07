@@ -42,6 +42,13 @@ module.exports = {
                 return res.status(400).json({ error: "Email already registered" });
             }
 
+            // Check if phone number already exists
+            const existingPhone = await User.findOne({ phone_number }).session(session);
+            if (existingPhone) {
+                await session.abortTransaction();
+                return res.status(400).json({ error: "Phone number already registered" });
+            }
+
             // Hash password
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
