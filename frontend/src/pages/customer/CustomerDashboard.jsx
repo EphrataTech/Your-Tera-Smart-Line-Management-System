@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { queueAPI, officeAPI, serviceAPI, profileAPI } from '../../services/api';
-import { Bell, Clock, Users, MapPin, User, Eye, EyeOff } from 'lucide-react';
+import { Bell, Clock, Users, MapPin, User, Eye, EyeOff, Plus, History } from 'lucide-react';
 import QRCode from 'qrcode';
 
 const CustomerDashboard = () => {
@@ -242,9 +242,13 @@ const CustomerDashboard = () => {
               color: activeTab === 'join' ? '#4A868C' : '#666',
               borderBottom: activeTab === 'join' ? '2px solid #4A868C' : 'none',
               cursor: 'pointer',
-              fontWeight: '600'
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
             }}
           >
+            <Plus size={16} />
             Join Queue
           </button>
           <button
@@ -256,9 +260,13 @@ const CustomerDashboard = () => {
               color: activeTab === 'status' ? '#4A868C' : '#666',
               borderBottom: activeTab === 'status' ? '2px solid #4A868C' : 'none',
               cursor: 'pointer',
-              fontWeight: '600'
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
             }}
           >
+            <Clock size={16} />
             My Tickets
           </button>
           <button
@@ -270,9 +278,13 @@ const CustomerDashboard = () => {
               color: activeTab === 'history' ? '#4A868C' : '#666',
               borderBottom: activeTab === 'history' ? '2px solid #4A868C' : 'none',
               cursor: 'pointer',
-              fontWeight: '600'
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
             }}
           >
+            <History size={16} />
             Ticket History
           </button>
           <button
@@ -284,9 +296,13 @@ const CustomerDashboard = () => {
               color: activeTab === 'profile' ? '#4A868C' : '#666',
               borderBottom: activeTab === 'profile' ? '2px solid #4A868C' : 'none',
               cursor: 'pointer',
-              fontWeight: '600'
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
             }}
           >
+            <User size={16} />
             Profile
           </button>
         </div>
