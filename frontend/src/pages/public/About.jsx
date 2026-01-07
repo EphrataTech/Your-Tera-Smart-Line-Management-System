@@ -1,7 +1,9 @@
 import Navbar from '../../components/layout/navbar';
 import Footer from '../../components/layout/footer';
+import { useAuth } from '../../context/AuthContext';
 
 const About = () => {
+  const { user } = useAuth();
   return (
     <div style={{ backgroundColor: 'white', minHeight: '100vh' }}>
       <Navbar />
@@ -81,31 +83,33 @@ const About = () => {
           </div>
         </div>
 
-        <div style={{
-          backgroundColor: '#f8f9fa',
-          padding: '3rem',
-          borderRadius: '12px',
-          textAlign: 'center'
-        }}>
-          <h2 style={{ color: '#4A868C', fontSize: '2rem', marginBottom: '1rem' }}>
-            Ready to Transform Your Service?
-          </h2>
-          <p style={{ color: '#666', fontSize: '1.1rem', marginBottom: '2rem' }}>
-            Join hundreds of organizations already using YourTera to improve their customer experience.
-          </p>
-          <button style={{
-            backgroundColor: '#4A868C',
-            color: 'white',
-            padding: '1rem 2rem',
-            border: 'none',
-            borderRadius: '6px',
-            fontSize: '1rem',
-            fontWeight: '600',
-            cursor: 'pointer'
+        {!user && (
+          <div style={{
+            backgroundColor: '#f8f9fa',
+            padding: '3rem',
+            borderRadius: '12px',
+            textAlign: 'center'
           }}>
-            Get Started Today
-          </button>
-        </div>
+            <h2 style={{ color: '#4A868C', fontSize: '2rem', marginBottom: '1rem' }}>
+              Ready to Transform Your Service?
+            </h2>
+            <p style={{ color: '#666', fontSize: '1.1rem', marginBottom: '2rem' }}>
+              Join hundreds of organizations already using YourTera to improve their customer experience.
+            </p>
+            <button style={{
+              backgroundColor: '#4A868C',
+              color: 'white',
+              padding: '1rem 2rem',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '1rem',
+              fontWeight: '600',
+              cursor: 'pointer'
+            }}>
+              Get Started Today
+            </button>
+          </div>
+        )}
       </div>
 
       <Footer />

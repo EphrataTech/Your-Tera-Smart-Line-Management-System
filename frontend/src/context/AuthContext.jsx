@@ -11,15 +11,26 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
+    
     if (token && userData) {
       try {
         const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
-        setIsAuthenticated(true);
+        // Check if token has expiry and if it's still valid
+        const tokenExpiry = localStorage.getItem('tokenExpiry');
+        if (tokenExpiry && new Date().getTime() > parseInt(tokenExpiry)) {
+          // Token expired, clear storage
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          localStorage.removeItem('tokenExpiry');
+        } else {
+          setUser(parsedUser);
+          setIsAuthenticated(true);
+        }
       } catch (error) {
         console.error('Error parsing user data:', error);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        localStorage.removeItem('tokenExpiry');
       }
     }
     setIsLoading(false);
@@ -30,6 +41,9 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(true);
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
+    // Set token expiry to 24 hours from now
+    const expiry = new Date().getTime() + (24 * 60 * 60 * 1000);
+    localStorage.setItem('tokenExpiry', expiry.toString());
   };
 
   const logout = () => {
@@ -37,6 +51,7 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('tokenExpiry');
   };
 
   const isAdmin = () => {

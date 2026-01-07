@@ -39,12 +39,13 @@ const SignIn = () => {
       if (user.role === 'Admin') {
         navigate('/admin/dashboard');
       } else {
-        navigate('/customer/dashboard');
+        navigate('/');
       }
     } catch (error) {
       console.error('Login error:', error);
       console.error('Error response:', error.response?.data);
-      setError(error.response?.data?.message || 'Login failed. Please try again.');
+      console.error('Network error:', error.code);
+      setError(error.response?.data?.message || error.response?.data?.error || error.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
