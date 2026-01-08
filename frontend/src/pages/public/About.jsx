@@ -22,17 +22,17 @@ const About = () => {
         "Multi-service support"
       ],
       documentation: {
-        overview: "Our Revenue Office solution digitizes the entire queue management process, reducing wait times by up to 85% and improving customer satisfaction.",
+        overview: "Our Revenue Office solution digitizes the entire queue management process, reducing wait times significantly and improving customer satisfaction.",
         howItWorks: [
-          "Citizens arrive and scan QR code or use mobile app",
+          "Citizens arrive and scan QR code or use mobile device",
           "System generates digital ticket with estimated wait time",
-          "Real-time updates sent via SMS and app notifications",
+          "Real-time updates sent via SMS and notifications",
           "Staff call next customer using digital display system",
           "Service completion tracked and analytics generated"
         ],
         benefits: [
           "Eliminate physical queues and crowding",
-          "Reduce average wait time from 2+ hours to 15-30 minutes",
+          "Reduce average wait time from hours to minutes",
           "Improve staff efficiency with organized workflow",
           "Generate detailed analytics and reports",
           "Enhance customer experience and satisfaction"
@@ -67,7 +67,7 @@ const About = () => {
           "Automated follow-up and satisfaction surveys"
         ],
         benefits: [
-          "Reduce customer service wait times by 70%",
+          "Reduce customer service wait times significantly",
           "Improve first-call resolution rates",
           "Better resource allocation across service types",
           "Enhanced customer satisfaction tracking",
@@ -113,7 +113,7 @@ const About = () => {
           "Birth certificate for ID applications",
           "Witness statements for residence verification",
           "Previous ID for renewal services",
-          "Passport photos (2 copies)",
+          "Passport photos (multiple copies)",
           "Supporting documents specific to service type"
         ]
       }
@@ -195,7 +195,7 @@ const About = () => {
               Our Impact
             </h3>
             <p style={{ color: '#666', lineHeight: '1.6' }}>
-              Serving over 50+ offices across Ethiopia, reducing wait times by 85%, 
+              Serving offices across Ethiopia, reducing wait times significantly, 
               and improving customer satisfaction for thousands of users daily.
             </p>
           </div>
@@ -242,12 +242,12 @@ const About = () => {
             <TechFeature 
               icon={<Smartphone size={24} />}
               title="Mobile-First Design"
-              description="Responsive web application accessible on any device"
+              description="Responsive web platform accessible on any device"
             />
             <TechFeature 
               icon={<Shield size={24} />}
               title="Secure & Reliable"
-              description="Enterprise-grade security with 99.9% uptime guarantee"
+              description="Enterprise-grade security with high uptime guarantee"
             />
             <TechFeature 
               icon={<Clock size={24} />}

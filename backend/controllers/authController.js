@@ -179,12 +179,21 @@ module.exports = {
             user.reset_expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
             await user.save();
 
-            // TODO: In production, send code via email service
-            // For now, return code in response (remove in production!)
-            res.json({ 
-                message: "Reset code generated! Check your email.",
-                code // Remove this in production - only for testing
-            }); 
+            // Send email with reset code
+            try {
+                const emailService = require('../services/emailService');
+                await emailService.sendVerificationCode(email, code);
+                res.json({ 
+                    message: "Reset code sent to your email. Please check your inbox."
+                }); 
+            } catch (emailError) {
+                console.error('Email sending failed:', emailError);
+                // For development, still return the code if email fails
+                res.json({ 
+                    message: "Reset code generated! (Email service unavailable)",
+                    code // Remove this in production
+                }); 
+            }
         } catch (error) {
             res.status(500).json({ error: error.message });
         }

@@ -54,11 +54,13 @@ class QueueService {
         await ticket.save();
 
         // Notify User
+        console.log(`Sending notification to user ${userId} at ${phoneNumber}`);
         await notificationService.notifyUser(
             userId.toString(),
             phoneNumber,
             `Smart Line: Ticket ${ticketNumber}. ${peopleAhead} ahead. Est. wait: ${estimatedWaitTime} mins.`
         );
+        console.log('Notification sent successfully');
 
         return ticket;
     }
