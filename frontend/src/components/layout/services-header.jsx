@@ -61,10 +61,6 @@ const ServicesHeader = () => {
                 <CheckCircle size={20} />
                 <span>Digital ticket with QR code verification</span>
               </div>
-              <div className="benefit-item">
-                <CheckCircle size={20} />
-                <span>Complete service history and analytics</span>
-              </div>
             </div>
           </div>
         </div>

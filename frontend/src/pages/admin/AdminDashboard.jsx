@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { adminAPI, officeAPI, serviceAPI, profileAPI } from '../../services/api';
-import { Users, Clock, CheckCircle, XCircle, Plus, Settings, BarChart3, Edit, Trash2, User, Eye, EyeOff } from 'lucide-react';
+import { Users, Clock, CheckCircle, XCircle, Plus, Settings, BarChart3, Edit, Trash2, User, Eye, EyeOff, Menu, X } from 'lucide-react';
 
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
@@ -32,6 +32,7 @@ const AdminDashboard = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // New office form
   const [newOffice, setNewOffice] = useState({
@@ -89,7 +90,20 @@ const AdminDashboard = () => {
     
     // Refresh tickets every 30 seconds
     const interval = setInterval(fetchTickets, 30000);
-    return () => clearInterval(interval);
+    
+    // Close mobile menu on window resize
+    const handleResize = () => {
+      if (window.innerWidth > 768) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   const fetchTickets = async () => {
@@ -388,7 +402,14 @@ const AdminDashboard = () => {
           </div>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <button
+              className="dashboard-mobile-menu-btn"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+            <button
               onClick={logout}
+              className="dashboard-logout-btn"
               style={{
                 backgroundColor: '#ef4444',
                 color: 'white',
@@ -406,23 +427,7 @@ const AdminDashboard = () => {
 
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '2rem 1.5rem', paddingTop: '180px' }}>
         {/* Navigation Tabs */}
-        <div style={{
-          display: 'flex',
-          gap: '1rem',
-          marginBottom: '2rem',
-          borderBottom: '2px solid #e5e7eb',
-          overflowX: 'auto',
-          position: 'fixed',
-          top: '90px',
-          left: 0,
-          right: 0,
-          backgroundColor: 'white',
-          zIndex: 999,
-          padding: '1rem 1.5rem',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          maxWidth: '1400px',
-          margin: '0 auto'
-        }}>
+        <div className="dashboard-nav-tabs">
           {[
             { key: 'overview', label: 'Overview', icon: BarChart3 },
             { key: 'tickets', label: 'Queue Management', icon: Clock },
@@ -452,6 +457,41 @@ const AdminDashboard = () => {
             </button>
           ))}
         </div>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="dashboard-mobile-menu">
+            {[
+              { key: 'overview', label: 'Overview', icon: BarChart3 },
+              { key: 'tickets', label: 'Queue Management', icon: Clock },
+              { key: 'services', label: 'Services', icon: Settings },
+              { key: 'users', label: 'Users', icon: Users },
+              { key: 'profile', label: 'Profile', icon: User }
+            ].map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                onClick={() => {
+                  setActiveTab(key);
+                  setIsMobileMenuOpen(false);
+                }}
+                className={`dashboard-mobile-nav-btn ${activeTab === key ? 'active' : ''}`}
+              >
+                <Icon size={16} />
+                {label}
+              </button>
+            ))}
+            <button
+              onClick={() => {
+                logout();
+                setIsMobileMenuOpen(false);
+              }}
+              className="dashboard-mobile-nav-btn"
+              style={{ color: '#ef4444' }}
+            >
+              Logout
+            </button>
+          </div>
+        )}
 
         {message && (
           <div style={{

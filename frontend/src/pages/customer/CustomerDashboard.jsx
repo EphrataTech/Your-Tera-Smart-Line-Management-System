@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { queueAPI, officeAPI, serviceAPI, profileAPI } from '../../services/api';
-import { Bell, Clock, Users, MapPin, User, Eye, EyeOff, Plus, History } from 'lucide-react';
+import { Bell, Clock, Users, MapPin, User, Eye, EyeOff, Plus, History, Menu, X } from 'lucide-react';
 import QRCode from 'qrcode';
 
 const CustomerDashboard = () => {
@@ -26,11 +26,25 @@ const CustomerDashboard = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     fetchOffices();
     fetchMyStatus();
     fetchProfile();
+    
+    // Close mobile menu on window resize
+    const handleResize = () => {
+      if (window.innerWidth > 768) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   useEffect(() => {
@@ -214,41 +228,34 @@ const CustomerDashboard = () => {
             </h1>
             <p style={{ color: '#666', margin: 0 }}>Welcome, {user.fullname}</p>
           </div>
-          <button
-            onClick={logout}
-            style={{
-              backgroundColor: '#ef4444',
-              color: 'white',
-              padding: '8px 16px',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer'
-            }}
-          >
-            Logout
-          </button>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <button
+              className="dashboard-mobile-menu-btn"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+            <button
+              onClick={logout}
+              className="dashboard-logout-btn"
+              style={{
+                backgroundColor: '#ef4444',
+                color: 'white',
+                padding: '8px 16px',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer'
+              }}
+            >
+              Logout
+            </button>
+          </div>
         </div>
       </header>
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1.5rem', paddingTop: '180px' }}>
         {/* Navigation Tabs */}
-        <div style={{
-          display: 'flex',
-          gap: '1rem',
-          marginBottom: '2rem',
-          borderBottom: '2px solid #e5e7eb',
-          overflowX: 'auto',
-          position: 'fixed',
-          top: '90px',
-          left: 0,
-          right: 0,
-          backgroundColor: 'white',
-          zIndex: 999,
-          padding: '1rem 1.5rem',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          maxWidth: '1200px',
-          margin: '0 auto'
-        }}>
+        <div className="dashboard-nav-tabs">
           <button
             onClick={() => setActiveTab('join')}
             style={{
@@ -326,6 +333,62 @@ const CustomerDashboard = () => {
             Profile
           </button>
         </div>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="dashboard-mobile-menu">
+            <button
+              onClick={() => {
+                setActiveTab('join');
+                setIsMobileMenuOpen(false);
+              }}
+              className={`dashboard-mobile-nav-btn ${activeTab === 'join' ? 'active' : ''}`}
+            >
+              <Plus size={16} />
+              Join Queue
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('status');
+                setIsMobileMenuOpen(false);
+              }}
+              className={`dashboard-mobile-nav-btn ${activeTab === 'status' ? 'active' : ''}`}
+            >
+              <Clock size={16} />
+              My Tickets
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('history');
+                setIsMobileMenuOpen(false);
+              }}
+              className={`dashboard-mobile-nav-btn ${activeTab === 'history' ? 'active' : ''}`}
+            >
+              <History size={16} />
+              Ticket History
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('profile');
+                setIsMobileMenuOpen(false);
+              }}
+              className={`dashboard-mobile-nav-btn ${activeTab === 'profile' ? 'active' : ''}`}
+            >
+              <User size={16} />
+              Profile
+            </button>
+            <button
+              onClick={() => {
+                logout();
+                setIsMobileMenuOpen(false);
+              }}
+              className="dashboard-mobile-nav-btn"
+              style={{ color: '#ef4444' }}
+            >
+              Logout
+            </button>
+          </div>
+        )}
 
         {message && (
           <div style={{
