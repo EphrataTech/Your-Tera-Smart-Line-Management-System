@@ -8,16 +8,6 @@ const { QueueTicket } = require('../models'); // Ensure correct model name
 module.exports = {
     // --- Queue Management (from develop) ---
 
-    callNext: async (req, res) => {
-        try {
-            const { service_id } = req.body;
-            const ticket = await adminService.callNext(service_id);
-            res.status(200).json({ message: "Next customer called", ticket });
-        } catch (error) {
-            res.status(400).json({ error: error.message });
-        }
-    },
-
     completeTicket: async (req, res) => {
         try {
             const { id } = req.params;
@@ -37,7 +27,7 @@ module.exports = {
             // 1. Find all users currently in this service's queue BEFORE resetting
             const mongoose = require('mongoose');
             const serviceObjectId = mongoose.Types.ObjectId.isValid(service_id) 
-                ? (typeof service_id === 'string' ? mongoose.Types.ObjectId(service_id) : service_id)
+                ? (typeof service_id === 'string' ? new mongoose.Types.ObjectId(service_id) : service_id)
                 : service_id;
 
             const activeTickets = await QueueTicket.find({ 
@@ -111,9 +101,8 @@ module.exports = {
     patchService: async (req, res) => {
         try {
             const { service_id } = req.params;
-            const { is_active } = req.body;
-            const service = await adminService.toggleServiceStatus(service_id, is_active);
-            res.json({ message: "Service status updated", service });
+            const service = await adminService.updateService(service_id, req.body);
+            res.json({ message: "Service updated successfully", service });
         } catch (error) {
             res.status(400).json({ error: error.message });
         }
@@ -143,6 +132,16 @@ module.exports = {
         try {
             const service = await adminService.createNewService(req.body);
             res.status(201).json({ message: "Service created successfully", service });
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    },
+
+    deleteService: async (req, res) => {
+        try {
+            const { service_id } = req.params;
+            const result = await adminService.deleteService(service_id);
+            res.status(200).json({ message: "Service deleted successfully", result });
         } catch (error) {
             res.status(400).json({ error: error.message });
         }

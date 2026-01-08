@@ -21,6 +21,7 @@ import AdminDashboard from "../pages/admin/AdminDashboard";
 
 // Customer
 import CustomerDashboard from "../pages/customer/CustomerDashboard";
+import MyTicket from "../pages/customer/MyTicket";
 
 // User (legacy routes - keeping for backward compatibility)
 import Status from "../pages/user/Status";
@@ -60,6 +61,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute requiredRole="Customer">
             <CustomerDashboard />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/customer/my-ticket" 
+        element={
+          <ProtectedRoute requiredRole="Customer">
+            <MyTicket />
           </ProtectedRoute>
         } 
       />

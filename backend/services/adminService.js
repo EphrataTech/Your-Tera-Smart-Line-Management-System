@@ -5,23 +5,6 @@ const mongoose = require('mongoose');
 class AdminService {
     // --- CORE QUEUE ACTIONS (from develop) ---
 
-    async callNext(service_id) {
-        const serviceObjectId = mongoose.Types.ObjectId.isValid(service_id) 
-            ? (typeof service_id === 'string' ? mongoose.Types.ObjectId(service_id) : service_id)
-            : service_id;
-
-        const nextTicket = await QueueTicket.findOne({
-            service_id: serviceObjectId,
-            status: 'Waiting'
-        }).sort({ position: 1 });
-
-        if (!nextTicket) throw new Error('No customers waiting for this service.');
-
-        nextTicket.status = 'Serving';
-        await nextTicket.save();
-        return nextTicket;
-    }
-
     async completeTicket(ticket_id) {
         if (!mongoose.Types.ObjectId.isValid(ticket_id)) {
             throw new Error('Invalid ticket ID format');
@@ -81,9 +64,18 @@ class AdminService {
         return await service.save();
     }
 
+    async deleteService(service_id) {
+        if (!mongoose.Types.ObjectId.isValid(service_id)) {
+            throw new Error('Invalid service ID format');
+        }
+        const service = await Service.findByIdAndDelete(service_id);
+        if (!service) throw new Error('Service not found');
+        return service;
+    }
+
     async resetQueueForDay(service_id) {
         const serviceObjectId = mongoose.Types.ObjectId.isValid(service_id) 
-            ? (typeof service_id === 'string' ? mongoose.Types.ObjectId(service_id) : service_id)
+            ? (typeof service_id === 'string' ? new mongoose.Types.ObjectId(service_id) : service_id)
             : service_id;
 
         const result = await QueueTicket.deleteMany({ 
@@ -114,6 +106,19 @@ class AdminService {
             service_id,
             { is_active },
             { new: true }
+        );
+        if (!service) throw new Error('Service not found');
+        return service;
+    }
+
+    async updateService(service_id, updateData) {
+        if (!mongoose.Types.ObjectId.isValid(service_id)) {
+            throw new Error('Invalid service ID format');
+        }
+        const service = await Service.findByIdAndUpdate(
+            service_id,
+            updateData,
+            { new: true, runValidators: true }
         );
         if (!service) throw new Error('Service not found');
         return service;

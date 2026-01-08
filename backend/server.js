@@ -8,6 +8,7 @@ const authRoutes = require('./routes/authRoutes');
 const officeRoutes = require('./routes/officeRoutes');
 const userRoutes = require('./routes/userRoutes');
 const serviceRoutes = require('./routes/serviceRoutes');
+const profileRoutes = require('./routes/profileRoutes');
 
 const queueRoutes = require('./routes/queueRoutes');
 const adminRoutes = require('./routes/adminRoutes');
@@ -31,6 +32,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/offices', officeRoutes); 
 app.use('/api/users', userRoutes);
 app.use('/api/services', serviceRoutes);
+app.use('/api/profile', profileRoutes);
 
 
 app.use('/api/queue', queueRoutes);
@@ -47,12 +49,12 @@ const PORT = process.env.PORT || 5000;
 // Connect to MongoDB
 connectDB()
     .then(() => {
-        console.log("✅ MongoDB connected successfully!");
+        console.log("MongoDB connected successfully!");
         app.listen(PORT, () => {
-            console.log(`🚀 Server is running on http://localhost:${PORT}`);
+            console.log(`Server is running on http://localhost:${PORT}`);
         });
     })
     .catch(err => {
-        console.error('❌ Unable to connect to the database:', err);
+        console.error('Unable to connect to the database:', err);
         process.exit(1);
     });

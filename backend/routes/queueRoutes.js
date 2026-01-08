@@ -7,6 +7,8 @@ const { verifyToken } = require('../middlewares/authMiddleware');
 router.post('/join', verifyToken, queueController.joinQueue);
 router.get('/office/:serviceId', verifyToken, queueController.getOfficeQueue);
 router.get('/my-status', verifyToken, queueController.getMyStatus);
+router.get('/my-tickets', verifyToken, queueController.getMyTickets);
+router.get('/my-history', verifyToken, queueController.getMyCompletedTickets);
 router.patch('/cancel/:ticketId', verifyToken, queueController.cancelMyTicket);
 router.patch('/status/:ticketId', queueController.updateStatus);
 

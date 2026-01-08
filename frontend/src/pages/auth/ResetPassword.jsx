@@ -1,127 +1,231 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
-import Rectangle34 from "../../assets/images/Rectangle34.png";
-import "../../styles/auth.css";
+import { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { authAPI } from '../../services/api';
 
-function ResetPassword() {
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  const navigate = useNavigate();
+const ResetPassword = () => {
   const location = useLocation();
-  const phone_number = location.state?.phone_number;
-  const code = location.state?.code;
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    email: location.state?.email || '',
+    code: location.state?.code || '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    document.body.classList.add("auth-page");
-    return () => {
-      document.body.classList.remove("auth-page");
-    };
-  }, []);
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+    setError('');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (newPassword.length < 8) {
-      alert("Password must be at least 8 characters");
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      alert("Passwords do not match");
-      return;
-    }
-
     setLoading(true);
+    setError('');
+
+    if (formData.newPassword !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      setLoading(false);
+      return;
+    }
 
     try {
-      const response = await axios.post(
-        "http://localhost:3000/api/auth/reset-password",
-        { phone_number, code, newPassword },
-        { headers: { "Content-Type": "application/json" } }
-      );
-
-      const data = response.data;
-      setLoading(false);
-
-      if (response.status === 200) {
-        navigate("/success");
-      } else {
-        alert(data.error || "Failed to reset password");
-      }
+      await authAPI.resetPassword({
+        email: formData.email,
+        code: formData.code,
+        newPassword: formData.newPassword
+      });
+      navigate('/success', { state: { message: 'Password reset successfully!' } });
     } catch (error) {
+      setError(error.response?.data?.error || 'Failed to reset password');
+    } finally {
       setLoading(false);
-      if (error.response) {
-        alert(error.response.data.error || "Server error");
-      } else {
-        alert("Server not responding");
-      }
     }
   };
 
   return (
-    <div className="card-1">
-      <img src={Rectangle34} alt="Reset Password" />
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(180deg, rgba(62, 129, 139, 1), rgba(5, 63, 71, 1))',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px'
+    }}>
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        padding: '40px',
+        width: '100%',
+        maxWidth: '400px',
+        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)'
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+          <h1 style={{ 
+            color: '#4A868C', 
+            fontSize: '28px', 
+            fontWeight: 'bold',
+            marginBottom: '8px'
+          }}>
+            Reset Password
+          </h1>
+          <p style={{ color: '#666', fontSize: '16px' }}>
+            Enter your new password
+          </p>
+        </div>
 
-      <div className="card-2 reset-card">
-        <h1 className="reset-title">Reset Password</h1>
-        <p className="reset-subtitle">please create your new password</p>
+        {error && (
+          <div style={{
+            backgroundColor: '#fee',
+            color: '#c33',
+            padding: '12px',
+            borderRadius: '6px',
+            marginBottom: '20px',
+            fontSize: '14px'
+          }}>
+            {error}
+          </div>
+        )}
 
-        <form className="form-1" onSubmit={handleSubmit}>
-          <div className="field-1">
-            <label>New Password</label>
-            <div className="password-input-wrapper">
-              <input
-                type={showNewPassword ? "text" : "password"}
-                placeholder="Password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                minLength={8}
-              />
-              <button
-                type="button"
-                className="toggle-visibility"
-                onClick={() => setShowNewPassword((v) => !v)}
-              >
-                👁
-              </button>
-            </div>
-            <p className="reset-hint">Must contain at least 8 characters</p>
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '8px', 
+              color: '#4A868C',
+              fontWeight: '500'
+            }}>
+              Email
+            </label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              readOnly
+              style={{
+                width: '100%',
+                padding: '12px',
+                border: '2px solid #e1e5e9',
+                borderRadius: '6px',
+                fontSize: '16px',
+                backgroundColor: '#f9f9f9'
+              }}
+            />
           </div>
 
-          <div className="field-1">
-            <label>Confirm Password</label>
-            <div className="password-input-wrapper">
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                placeholder="Confirm Password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                minLength={8}
-              />
-              <button
-                type="button"
-                className="toggle-visibility"
-                onClick={() => setShowConfirmPassword((v) => !v)}
-              >
-                👁
-              </button>
-            </div>
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '8px', 
+              color: '#4A868C',
+              fontWeight: '500'
+            }}>
+              Verification Code
+            </label>
+            <input
+              type="text"
+              name="code"
+              value={formData.code}
+              onChange={handleChange}
+              required
+              readOnly
+              style={{
+                width: '100%',
+                padding: '12px',
+                border: '2px solid #e1e5e9',
+                borderRadius: '6px',
+                fontSize: '16px',
+                backgroundColor: '#f9f9f9'
+              }}
+            />
           </div>
 
-          <button type="submit" disabled={loading}>
-            {loading ? "Confirming..." : "Confirm Password"}
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '8px', 
+              color: '#4A868C',
+              fontWeight: '500'
+            }}>
+              New Password
+            </label>
+            <input
+              type="password"
+              name="newPassword"
+              value={formData.newPassword}
+              onChange={handleChange}
+              required
+              style={{
+                width: '100%',
+                padding: '12px',
+                border: '2px solid #e1e5e9',
+                borderRadius: '6px',
+                fontSize: '16px',
+                outline: 'none',
+                transition: 'border-color 0.3s'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#4A868C'}
+              onBlur={(e) => e.target.style.borderColor = '#e1e5e9'}
+            />
+          </div>
+
+          <div style={{ marginBottom: '25px' }}>
+            <label style={{ 
+              display: 'block', 
+              marginBottom: '8px', 
+              color: '#4A868C',
+              fontWeight: '500'
+            }}>
+              Confirm New Password
+            </label>
+            <input
+              type="password"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required
+              style={{
+                width: '100%',
+                padding: '12px',
+                border: '2px solid #e1e5e9',
+                borderRadius: '6px',
+                fontSize: '16px',
+                outline: 'none',
+                transition: 'border-color 0.3s'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#4A868C'}
+              onBlur={(e) => e.target.style.borderColor = '#e1e5e9'}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: '100%',
+              backgroundColor: loading ? '#ccc' : '#4A868C',
+              color: 'white',
+              padding: '14px',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '16px',
+              fontWeight: '600',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              transition: 'background-color 0.3s'
+            }}
+          >
+            {loading ? 'Resetting...' : 'Reset Password'}
           </button>
         </form>
       </div>
     </div>
   );
-}
+};
 
 export default ResetPassword;

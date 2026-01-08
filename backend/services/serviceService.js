@@ -8,7 +8,7 @@ module.exports = {
         
         // Convert office_id to ObjectId if it's a string
         const officeObjectId = mongoose.Types.ObjectId.isValid(office_id) 
-            ? (typeof office_id === 'string' ? mongoose.Types.ObjectId(office_id) : office_id)
+            ? (typeof office_id === 'string' ? new mongoose.Types.ObjectId(office_id) : office_id)
             : office_id;
 
         const service = new Service({
@@ -36,7 +36,7 @@ module.exports = {
             throw new Error('Invalid office ID format');
         }
         const officeObjectId = mongoose.Types.ObjectId.isValid(officeId) 
-            ? (typeof officeId === 'string' ? mongoose.Types.ObjectId(officeId) : officeId)
+            ? (typeof officeId === 'string' ? new mongoose.Types.ObjectId(officeId) : officeId)
             : officeId;
         return await Service.find({ office_id: officeObjectId });
     },
@@ -49,7 +49,7 @@ module.exports = {
         // Convert office_id to ObjectId if it's being updated
         if (updateData.office_id) {
             updateData.office_id = mongoose.Types.ObjectId.isValid(updateData.office_id) 
-                ? (typeof updateData.office_id === 'string' ? mongoose.Types.ObjectId(updateData.office_id) : updateData.office_id)
+                ? (typeof updateData.office_id === 'string' ? new mongoose.Types.ObjectId(updateData.office_id) : updateData.office_id)
                 : updateData.office_id;
         }
 

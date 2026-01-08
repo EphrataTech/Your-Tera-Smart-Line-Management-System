@@ -42,6 +42,13 @@ module.exports = {
                 return res.status(400).json({ error: "📧 This email is already registered. Please use a different email or try signing in." });
             }
 
+            // Check if phone number already exists
+            const existingPhone = await User.findOne({ phone_number }).session(session);
+            if (existingPhone) {
+                await session.abortTransaction();
+                return res.status(400).json({ error: "Phone number already registered" });
+            }
+
             // Hash password
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
@@ -79,6 +86,9 @@ module.exports = {
             if (error.code === 11000) {
                 // Duplicate key error
                 const field = Object.keys(error.keyPattern)[0];
+                if (field === 'phone_number') {
+                    return res.status(400).json({ error: "Phone number already registered" });
+                }
                 return res.status(400).json({ error: `${field} already exists` });
             }
             res.status(500).json({ error: error.message });
@@ -169,12 +179,21 @@ module.exports = {
             user.reset_expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
             await user.save();
 
-            // TODO: In production, send code via email service
-            // For now, return code in response (remove in production!)
-            res.json({ 
-                message: "Reset code generated! Check your email.",
-                code // Remove this in production - only for testing
-            }); 
+            // Send email with reset code
+            try {
+                const emailService = require('../services/emailService');
+                await emailService.sendVerificationCode(email, code);
+                res.json({ 
+                    message: "Reset code sent to your email. Please check your inbox."
+                }); 
+            } catch (emailError) {
+                console.error('Email sending failed:', emailError);
+                // For development, still return the code if email fails
+                res.json({ 
+                    message: "Reset code generated! (Email service unavailable)",
+                    code // Remove this in production
+                }); 
+            }
         } catch (error) {
             res.status(500).json({ error: error.message });
         }
