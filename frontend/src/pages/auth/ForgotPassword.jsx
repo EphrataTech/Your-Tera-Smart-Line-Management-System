@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { authAPI } from '../../services/api';
 
 const ForgotPassword = () => {
@@ -7,6 +7,7 @@ const ForgotPassword = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,6 +18,11 @@ const ForgotPassword = () => {
     try {
       const response = await authAPI.forgotPassword({ email });
       setMessage(response.data.message);
+      
+      // Navigate to verify page after 2 seconds
+      setTimeout(() => {
+        navigate('/verify', { state: { email } });
+      }, 2000);
     } catch (error) {
       setError(error.response?.data?.error || 'Failed to send reset code');
     } finally {

@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { authAPI } from '../../services/api';
 
 const Verify = () => {
+  const location = useLocation();
   const [formData, setFormData] = useState({
-    email: '',
+    email: location.state?.email || '',
     code: ''
   });
   const [loading, setLoading] = useState(false);

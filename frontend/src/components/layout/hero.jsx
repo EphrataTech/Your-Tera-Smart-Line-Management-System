@@ -30,11 +30,16 @@ const Hero = () => {
             <span>Smart Notifications</span>
           </div> */}
         {/* </div> */}
-        {!isAuthenticated && (
-          <button className="hero-btn" onClick={() => navigate('/signup')}>
-            Get Started
+        <div className="hero-buttons">
+          {!isAuthenticated && (
+            <button className="hero-btn" onClick={() => navigate('/signup')}>
+              Get Started
+            </button>
+          )}
+          <button className="hero-btn-secondary" onClick={() => navigate('/about')}>
+            Learn More
           </button>
-        )}
+        </div>
       </div>
 
       <div className="hero-image">

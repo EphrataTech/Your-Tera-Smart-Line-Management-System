@@ -284,6 +284,12 @@ main {
   font-size: 1rem;
 }
 
+.hero-buttons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
 .hero-btn {
   background: linear-gradient(135deg, #4A868C 0%, #3D6E73 100%);
   color: white;
@@ -294,15 +300,36 @@ main {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  align-self: flex-start;
   box-shadow: 0 4px 15px rgba(74, 134, 140, 0.3);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  max-width: 200px;
+  min-width: 150px;
 }
 
 .hero-btn:hover {
   background: linear-gradient(135deg, #3D6E73 0%, #2D5A5F 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(74, 134, 140, 0.4);
+}
+
+.hero-btn-secondary {
+  background: transparent;
+  color: #4A868C;
+  padding: 0.8rem 1.2rem;
+  border: 2px solid #4A868C;
+  border-radius: 50px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-width: 150px;
+}
+
+.hero-btn-secondary:hover {
+  background: #4A868C;
+  color: white;
   transform: translateY(-3px);
   box-shadow: 0 8px 25px rgba(74, 134, 140, 0.4);
 }
@@ -1189,10 +1216,18 @@ main {
     gap: 1rem;
   }
   
-  .hero-btn {
+  .hero-buttons {
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+  }
+  
+  .hero-btn,
+  .hero-btn-secondary {
+    width: 100%;
+    min-width: auto;
     padding: 1rem 1.5rem;
     font-size: 1rem;
-    width: 100%;
   }
   
   .hero-image {
