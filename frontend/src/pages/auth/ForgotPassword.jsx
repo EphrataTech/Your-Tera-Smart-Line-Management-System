@@ -19,10 +19,20 @@ const ForgotPassword = () => {
       const response = await authAPI.forgotPassword({ email });
       setMessage(response.data.message);
       
-      // Navigate to verify page after 2 seconds
+      // Show code in development mode
+      if (response.data.code) {
+        setMessage(`${response.data.message}\n\nYour reset code is: ${response.data.code}`);
+      }
+      
+      // Navigate to verify page after 3 seconds
       setTimeout(() => {
-        navigate('/verify', { state: { email } });
-      }, 2000);
+        navigate('/verify', { 
+          state: { 
+            email: email,
+            code: response.data.code // Pass code if available
+          } 
+        });
+      }, 3000);
     } catch (error) {
       setError(error.response?.data?.error || 'Failed to send reset code');
     } finally {
@@ -81,7 +91,8 @@ const ForgotPassword = () => {
             padding: '12px',
             borderRadius: '6px',
             marginBottom: '20px',
-            fontSize: '14px'
+            fontSize: '14px',
+            whiteSpace: 'pre-line'
           }}>
             {message}
           </div>

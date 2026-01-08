@@ -2,7 +2,7 @@ import Navbar from '../../components/layout/navbar';
 import Footer from '../../components/layout/footer';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Clock, Users, MapPin, CheckCircle, FileText, Shield, Smartphone } from 'lucide-react';
+import { Clock, Users, MapPin, CheckCircle, Shield, Smartphone } from 'lucide-react';
 
 const About = () => {
   const { user } = useAuth();
@@ -28,13 +28,12 @@ const About = () => {
           "System generates digital ticket with estimated wait time",
           "Real-time updates sent via SMS and notifications",
           "Staff call next customer using digital display system",
-          "Service completion tracked and analytics generated"
+          "Service completion tracked for workflow optimization"
         ],
         benefits: [
           "Eliminate physical queues and crowding",
           "Reduce average wait time from hours to minutes",
           "Improve staff efficiency with organized workflow",
-          "Generate detailed analytics and reports",
           "Enhance customer experience and satisfaction"
         ],
         requirements: [
@@ -124,12 +123,16 @@ const About = () => {
     <div style={{ backgroundColor: 'white', minHeight: '100vh' }}>
       <Navbar />
       
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '4rem 1.5rem' }}>
+      <div style={{ 
+        maxWidth: '1200px', 
+        margin: '0 auto', 
+        padding: window.innerWidth <= 768 ? '2rem 1rem' : '4rem 1.5rem'
+      }}>
         {/* Header Section */}
         <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
           <h1 style={{ 
             color: '#4A868C', 
-            fontSize: '3rem', 
+            fontSize: window.innerWidth <= 768 ? '2.5rem' : '3rem', 
             fontWeight: 'bold',
             marginBottom: '1rem'
           }}>
@@ -148,8 +151,8 @@ const About = () => {
         {/* Mission, Vision, Impact Cards */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-          gap: '3rem',
+          gridTemplateColumns: window.innerWidth <= 768 ? '1fr' : 'repeat(auto-fit, minmax(300px, 1fr))',
+          gap: window.innerWidth <= 768 ? '2rem' : '3rem',
           marginBottom: '6rem'
         }}>
           <div style={{
@@ -254,11 +257,6 @@ const About = () => {
               title="Real-Time Updates"
               description="Live queue status and instant SMS notifications"
             />
-            <TechFeature 
-              icon={<FileText size={24} />}
-              title="Analytics & Reporting"
-              description="Comprehensive insights and performance metrics"
-            />
           </div>
         </div>
 
@@ -331,8 +329,8 @@ const ServiceDocumentation = ({ service, index }) => {
     }}>
       <div style={{
         display: 'grid',
-        gridTemplateColumns: isEven ? '1fr 1fr' : '1fr 1fr',
-        minHeight: '400px'
+        gridTemplateColumns: window.innerWidth <= 768 ? '1fr' : (isEven ? '1fr 1fr' : '1fr 1fr'),
+        minHeight: window.innerWidth <= 768 ? 'auto' : '400px'
       }}>
         {/* Image Section */}
         <div style={{
@@ -347,8 +345,8 @@ const ServiceDocumentation = ({ service, index }) => {
         
         {/* Content Section */}
         <div style={{
-          order: isEven ? 2 : 1,
-          padding: '3rem',
+          order: window.innerWidth <= 768 ? 2 : (isEven ? 2 : 1),
+          padding: window.innerWidth <= 768 ? '2rem 1.5rem' : '3rem',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center'
@@ -388,11 +386,11 @@ const ServiceDocumentation = ({ service, index }) => {
       {/* Detailed Documentation */}
       <div style={{
         backgroundColor: '#f8f9fa',
-        padding: '3rem'
+        padding: window.innerWidth <= 768 ? '2rem 1.5rem' : '3rem'
       }}>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gridTemplateColumns: window.innerWidth <= 768 ? '1fr' : 'repeat(auto-fit, minmax(300px, 1fr))',
           gap: '2rem'
         }}>
           {/* Overview */}

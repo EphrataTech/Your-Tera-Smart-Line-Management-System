@@ -179,7 +179,17 @@ module.exports = {
             user.reset_expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
             await user.save();
 
-            // Send email with reset code
+            // In development mode, always return the code immediately
+            if (process.env.NODE_ENV === 'development') {
+                console.log('🔧 DEVELOPMENT MODE - Reset code for', email, ':', code);
+                return res.json({ 
+                    message: "Development Mode: Reset code generated",
+                    code: code,
+                    email: email
+                }); 
+            }
+
+            // Try to send email in production
             try {
                 const emailService = require('../services/emailService');
                 await emailService.sendVerificationCode(email, code);
@@ -187,12 +197,13 @@ module.exports = {
                     message: "Reset code sent to your email. Please check your inbox."
                 }); 
             } catch (emailError) {
-                console.error('Email sending failed:', emailError);
-                // For development, still return the code if email fails
+                console.error('Email sending failed:', emailError.message);
+                // Fallback: return code if email fails in production
+                console.log('🔧 EMAIL FAILED - Reset code for', email, ':', code);
                 res.json({ 
-                    message: "Reset code generated! (Email service unavailable)",
-                    code // Remove this in production
-                }); 
+                    message: "Email service temporarily unavailable. Your reset code is: " + code,
+                    code: code
+                });
             }
         } catch (error) {
             res.status(500).json({ error: error.message });
@@ -202,48 +213,70 @@ module.exports = {
     // 5. VERIFY RESET CODE: Validates the reset code
     verifyResetCode: async (req, res) => {
         try {
+            console.log('🔍 Verify reset code request:', req.body);
             const { email, code } = req.body;
             
             if (!email || !code) {
+                console.log('❌ Missing email or code');
                 return res.status(400).json({ error: "Email and code are required" });
             }
 
+            console.log('🔎 Looking for user with email:', email, 'and code:', code);
             const user = await User.findOne({ 
                 email: email.toLowerCase(), 
                 reset_code: code
             });
 
-            if (!user || user.reset_expiry < new Date()) {
+            if (!user) {
+                console.log('❌ User not found with provided email and code');
                 return res.status(400).json({ error: "Invalid or expired code." });
             }
 
+            if (user.reset_expiry < new Date()) {
+                console.log('❌ Code expired for user:', user.email);
+                return res.status(400).json({ error: "Invalid or expired code." });
+            }
+
+            console.log('✅ Code verified successfully for user:', user.email);
             res.status(200).json({ message: "Reset code verified successfully." });
         } catch (error) {
+            console.error('💥 Verify reset code error:', error);
             res.status(400).json({ error: error.message });
         }
     },
 
     // 6. RESET PASSWORD: Updates password using email and code
     resetPassword: async (req, res) => {
+        console.log('🔐 Reset password request:', req.body);
         const { email, code, newPassword } = req.body;
         
         if (!email || !code || !newPassword) {
+            console.log('❌ Missing required fields');
             return res.status(400).json({ error: "Email, code, and newPassword are required" });
         }
 
         const session = await User.db.startSession();
         session.startTransaction();
         try {
+            console.log('🔎 Looking for user with email:', email, 'and code:', code);
             const user = await User.findOne({ 
                 email: email.toLowerCase(), 
                 reset_code: code 
             }).session(session);
 
-            if (!user || user.reset_expiry < new Date()) {
+            if (!user) {
+                console.log('❌ User not found');
                 await session.abortTransaction();
                 return res.status(400).json({ error: "Unauthorized or code expired." });
             }
 
+            if (user.reset_expiry < new Date()) {
+                console.log('❌ Code expired');
+                await session.abortTransaction();
+                return res.status(400).json({ error: "Unauthorized or code expired." });
+            }
+
+            console.log('🔒 Updating password for user:', user.email);
             const salt = await bcrypt.genSalt(10);
             const hashed = await bcrypt.hash(newPassword, salt);
 
@@ -260,9 +293,11 @@ module.exports = {
             );
 
             await session.commitTransaction();
+            console.log('✅ Password reset successfully');
             res.json({ message: "Password has been reset successfully." });
         } catch (error) {
             await session.abortTransaction();
+            console.error('💥 Reset password error:', error);
             res.status(500).json({ error: error.message });
         } finally {
             session.endSession();

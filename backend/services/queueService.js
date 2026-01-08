@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const notificationService = require('./notificationService');
 
 class QueueService {
-    // 1. Join Queue (With Smart Ticket Numbering & SMS)
+    // 1. Join Queue (With Smart Ticket Numbering & Email Notifications)
     async joinQueue(userId, serviceId, phoneNumber) {
         // Convert IDs to ObjectId
         let userObjectId = userId;
@@ -28,6 +28,10 @@ class QueueService {
 
         const service = await Service.findById(serviceObjectId);
         if (!service) throw new Error('Service not found.');
+
+        // Get user email for notifications
+        const user = await User.findById(userObjectId);
+        if (!user) throw new Error('User not found.');
 
         // Calculate Position
         const peopleAhead = await QueueTicket.countDocuments({
@@ -53,36 +57,40 @@ class QueueService {
         });
         await ticket.save();
 
-        // Notify User
-        console.log(`Sending notification to user ${userId} at ${phoneNumber}`);
+        // Notify User via Email
+        console.log(`Sending email notification to user ${userId} at ${user.email}`);
         await notificationService.notifyUser(
             userId.toString(),
-            phoneNumber,
-            `Smart Line: Ticket ${ticketNumber}. ${peopleAhead} ahead. Est. wait: ${estimatedWaitTime} mins.`
+            user.email,
+            `Your ticket ${ticketNumber} has been created. ${peopleAhead} people ahead of you. Estimated wait time: ${estimatedWaitTime} minutes.`,
+            'Email',
+            'Queue Ticket Created - Your Tera'
         );
-        console.log('Notification sent successfully');
+        console.log('Email notification sent successfully');
 
         return ticket;
     }
 
-    // 2. Update Status (With "Turn Notification" and "5-Back Notification")
+    // 2. Update Status (With "Turn Notification" and "5-Back Notification" via Email)
     async updateTicketStatus(ticketId, newStatus) {
         if (!mongoose.Types.ObjectId.isValid(ticketId)) {
             throw new Error('Invalid ticket ID format');
         }
         
-        const ticket = await QueueTicket.findById(ticketId).populate('user_id', 'phone_number');
+        const ticket = await QueueTicket.findById(ticketId).populate('user_id', 'email fullname');
         if (!ticket) throw new Error('Ticket not found');
 
         ticket.status = newStatus;
         await ticket.save();
 
         if (newStatus === 'Serving') {
-            // Notify the person currently called
+            // Notify the person currently called via email
             await notificationService.notifyUser(
                 ticket.user_id._id.toString(),
-                ticket.phone_number,
-                `Smart Line: It is your turn! Please proceed to the counter for ${ticket.ticket_number}.`
+                ticket.user_id.email,
+                `It's your turn! Please proceed to the counter for ticket ${ticket.ticket_number}. Thank you for your patience.`,
+                'Email',
+                'Your Turn - Queue Notification'
             );
 
             // Notify the person 5 spots behind (Position Shift Detector)
@@ -91,25 +99,27 @@ class QueueService {
                 position: targetPosition,
                 service_id: ticket.service_id,
                 status: 'Waiting'
-            }).populate('user_id');
+            }).populate('user_id', 'email fullname');
 
             if (personFiveBack) {
                 await notificationService.notifyUser(
                     personFiveBack.user_id._id.toString(),
-                    personFiveBack.phone_number,
-                    `Smart Line: Reminder! Only 5 people ahead. Please head to the office now.`
+                    personFiveBack.user_id.email,
+                    `Reminder: Only 5 people ahead of you in the queue. Please head to the office now for ticket ${personFiveBack.ticket_number}.`,
+                    'Email',
+                    'Queue Reminder - Your Tera'
                 );
             }
         }
         return ticket;
     }
 
-    // 3. Cancel Ticket (User side)
+    // 3. Cancel Ticket (User side) with Email Notification
     async cancelTicket(ticketNumber, userId) {
         // First, find the ticket by ticket number only
         const ticket = await QueueTicket.findOne({ 
             ticket_number: ticketNumber
-        });
+        }).populate('user_id', 'email fullname');
         
         if (!ticket) {
             throw new Error('Ticket not found');
@@ -117,7 +127,7 @@ class QueueService {
 
         // Check if the user owns this ticket (try multiple formats)
         const userIdString = userId.toString();
-        const ticketUserIdString = ticket.user_id.toString();
+        const ticketUserIdString = ticket.user_id._id.toString();
         
         if (userIdString !== ticketUserIdString) {
             throw new Error('Unauthorized - ticket belongs to different user');
@@ -133,8 +143,10 @@ class QueueService {
 
         await notificationService.notifyUser(
             userId.toString(),
-            ticket.phone_number,
-            `Your ticket ${ticket.ticket_number} has been cancelled.`
+            ticket.user_id.email,
+            `Your ticket ${ticket.ticket_number} has been cancelled successfully. You can join the queue again anytime.`,
+            'Email',
+            'Ticket Cancelled - Your Tera'
         );
         return { message: "Ticket cancelled successfully." };
     }

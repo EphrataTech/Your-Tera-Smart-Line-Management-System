@@ -6,7 +6,7 @@ const Verify = () => {
   const location = useLocation();
   const [formData, setFormData] = useState({
     email: location.state?.email || '',
-    code: ''
+    code: location.state?.code || ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -123,6 +123,8 @@ const Verify = () => {
               name="code"
               value={formData.code}
               onChange={handleChange}
+              placeholder="Enter 4-digit code"
+              maxLength="4"
               required
               style={{
                 width: '100%',
@@ -131,7 +133,9 @@ const Verify = () => {
                 borderRadius: '6px',
                 fontSize: '16px',
                 outline: 'none',
-                transition: 'border-color 0.3s'
+                transition: 'border-color 0.3s',
+                textAlign: 'center',
+                letterSpacing: '0.5em'
               }}
               onFocus={(e) => e.target.style.borderColor = '#4A868C'}
               onBlur={(e) => e.target.style.borderColor = '#e1e5e9'}
