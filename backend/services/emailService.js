@@ -2,8 +2,8 @@ const nodemailer = require('nodemailer');
 
 // Create transporter based on environment
 const createTransporter = () => {
-    if (process.env.SENDGRID_API_KEY && process.env.SENDGRID_API_KEY !== 'your_sendgrid_api_key') {
-        // Use SendGrid for production
+    if (process.env.SENDGRID_API_KEY && process.env.SENDGRID_API_KEY !== 'your_sendgrid_api_key' && process.env.SENDGRID_API_KEY.length > 20) {
+        console.log('📮 Using SendGrid transporter');
         return nodemailer.createTransport({
             host: 'smtp.sendgrid.net',
             port: 587,
@@ -11,16 +11,22 @@ const createTransporter = () => {
             auth: {
                 user: 'apikey',
                 pass: process.env.SENDGRID_API_KEY
-            }
+            },
+            connectionTimeout: 10000,
+            greetingTimeout: 5000,
+            socketTimeout: 10000
         });
     } else {
-        // Use Gmail for development/fallback
+        console.log('📮 Using Gmail transporter (SendGrid not available)');
         return nodemailer.createTransport({
             service: 'gmail',
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS ? process.env.EMAIL_PASS.replace(/\s/g, '') : ''
-            }
+            },
+            connectionTimeout: 10000,
+            greetingTimeout: 5000,
+            socketTimeout: 10000
         });
     }
 };
