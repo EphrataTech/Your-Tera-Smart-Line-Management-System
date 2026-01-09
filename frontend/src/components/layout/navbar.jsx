@@ -51,12 +51,10 @@ const Navbar = () => {
         </div>
 
         <div className="navbar-actions">
-          {isAuthenticated ? (
+          {isAuthenticated && (
             <button className="profile-btn" onClick={handleProfileClick} title={`Go to ${user?.role} Dashboard`}>
               <User size={20} />
             </button>
-          ) : (
-            <button className="login-btn" onClick={() => navigate('/signin')}>LOGIN</button>
           )}
         </div>
 
