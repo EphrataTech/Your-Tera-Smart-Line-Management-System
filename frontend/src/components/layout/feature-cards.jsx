@@ -15,7 +15,7 @@ const ServiceCard = ({ title, description, image }) => {
           className="learn-more-link" 
           onClick={() => navigate('/about')}
         >
-          Learn More >>
+          Learn More
         </div>
       </div>
     </div>
