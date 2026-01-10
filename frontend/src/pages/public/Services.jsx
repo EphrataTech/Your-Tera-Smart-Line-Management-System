@@ -45,10 +45,20 @@ const Services = () => {
   };
 
   const handleJoinQueue = async (service) => {
+    console.log('handleJoinQueue called with:', { service, user });
+    
     if (!user) {
+      console.log('No user found, redirecting to signup');
       navigate('/signup');
       return;
     }
+
+    console.log('User authenticated:', {
+      userId: user.user_id,
+      email: user.email,
+      phone: user.phone_number,
+      role: user.role
+    });
 
     // Show documents modal first
     setSelectedServiceForJoin(service);
@@ -58,21 +68,41 @@ const Services = () => {
   const confirmJoinQueue = async () => {
     if (!selectedServiceForJoin) return;
 
-    setJoinLoading(selectedServiceForJoin._id); // Set loading for specific service
+    setJoinLoading(selectedServiceForJoin._id);
     setShowDocumentsModal(false);
     try {
+      console.log('Attempting to join queue with data:', {
+        service_id: selectedServiceForJoin._id,
+        phone_number: user.phone_number,
+        user: user
+      });
+      
       const response = await queueAPI.joinQueue({
         service_id: selectedServiceForJoin._id,
         phone_number: user.phone_number
       });
+      
+      console.log('Join queue response:', response.data);
       setMessage('Successfully joined the queue!');
       setNewTicket(response.data.data);
       setShowTicketModal(true);
       setSelectedServiceForJoin(null);
     } catch (error) {
-      setMessage(error.response?.data?.error || 'Failed to join queue');
+      console.error('Join queue error:', error);
+      console.error('Error response:', error.response?.data);
+      
+      let errorMessage = 'Failed to join queue';
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setMessage(errorMessage);
     } finally {
-      setJoinLoading(null); // Clear loading state
+      setJoinLoading(null);
     }
   };
 
