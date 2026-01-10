@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Ticket, Clock, MapPin, Building2, AlertCircle } from 'lucide-react';
+import { Ticket, Clock, MapPin, Building2, AlertCircle, X } from 'lucide-react';
+import { queueAPI } from '../../services/api';
 
 const MyTicket = () => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [cancellingTicket, setCancellingTicket] = useState(null);
 
   useEffect(() => {
     fetchMyTickets();
@@ -12,24 +14,31 @@ const MyTicket = () => {
 
   const fetchMyTickets = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/queue/my-tickets', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setTickets(data.tickets);
-      } else {
-        setError(data.error || 'Failed to fetch tickets');
-      }
+      const response = await queueAPI.getMyStatus();
+      // Filter out cancelled and completed tickets to show only active ones
+      const activeTickets = response.data.filter(ticket => 
+        ticket.status === 'Waiting' || ticket.status === 'Serving'
+      );
+      setTickets(activeTickets);
     } catch (err) {
-      setError('Network error occurred');
+      console.error('Error fetching tickets:', err);
+      setError('Failed to fetch tickets');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancelTicket = async (ticketId) => {
+    setCancellingTicket(ticketId);
+    try {
+      await queueAPI.cancelTicket(ticketId);
+      // Remove the cancelled ticket from the list immediately
+      setTickets(tickets.filter(ticket => ticket._id !== ticketId));
+    } catch (err) {
+      console.error('Error cancelling ticket:', err);
+      setError('Failed to cancel ticket');
+    } finally {
+      setCancellingTicket(null);
     }
   };
 
@@ -159,12 +168,37 @@ const MyTicket = () => {
                       {ticket.status}
                     </div>
                   </div>
-                  <div style={{
-                    textAlign: 'right',
-                    color: '#6b7280',
-                    fontSize: '14px'
-                  }}>
-                    Position: #{ticket.position}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{
+                      textAlign: 'right',
+                      color: '#6b7280',
+                      fontSize: '14px'
+                    }}>
+                      Position: #{ticket.position}
+                    </div>
+                    {ticket.status === 'Waiting' && (
+                      <button
+                        onClick={() => handleCancelTicket(ticket._id)}
+                        disabled={cancellingTicket === ticket._id}
+                        style={{
+                          backgroundColor: '#ef4444',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          padding: '8px 12px',
+                          cursor: cancellingTicket === ticket._id ? 'not-allowed' : 'pointer',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          opacity: cancellingTicket === ticket._id ? 0.6 : 1
+                        }}
+                      >
+                        <X size={16} />
+                        {cancellingTicket === ticket._id ? 'Cancelling...' : 'Cancel'}
+                      </button>
+                    )}
                   </div>
                 </div>
 
