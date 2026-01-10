@@ -3,6 +3,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const connectDB = require('./config/mongodb'); 
 const authRoutes = require('./routes/authRoutes');
 const officeRoutes = require('./routes/officeRoutes');
@@ -25,9 +26,18 @@ app.use(cors({
 })); 
 app.use(express.json()); 
 
+// Serve static files from React build
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, '../frontend/dist')));
+}
+
 // Basic Health Check Route
 app.get('/', (req, res) => {
-    res.send('Smart Line Management System API is Running...');
+    if (process.env.NODE_ENV === 'production') {
+        res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
+    } else {
+        res.send('Smart Line Management System API is Running...');
+    }
 });
 
 // Health check endpoint for deployment
@@ -46,6 +56,13 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/queue', queueRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
+
+// Handle React routing - this should be AFTER all API routes
+if (process.env.NODE_ENV === 'production') {
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
+    });
+}
 
 setInterval(() => {
     sessionService.clearExpiredSessions();
