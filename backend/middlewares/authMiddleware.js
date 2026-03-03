@@ -5,10 +5,10 @@ require('dotenv').config();
 const sessionService = require('../services/sessionService');
 
 // Support both spellings just in case, but prioritize the standard one
-const JWT_SECRET = process.env.JWT_SECRET || process.env.JWT_SECRETE;
+const JWT_SECRET = process.env.JWT_SECRET;
 
 if (!JWT_SECRET) {
-    console.error('❌ AUTH_ERROR: JWT_SECRET is missing from process.env');
+    console.error('AUTH_ERROR: JWT_SECRET is missing from process.env');
 }
 
 /**
